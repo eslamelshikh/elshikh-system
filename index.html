@@ -1321,13 +1321,23 @@
     return closing.expenses.reduce(function(sum,e){ return sum + (Number(e.amount)||0); },0);
   }
 
+  function dailyWagesPaid(date){
+    var log = state.staffLogs[date];
+    if(!log) return 0;
+    var total = 0;
+    state.staff.forEach(function(s){
+      if(log[s.id]) total += (Number(log[s.id].paid)||0);
+    });
+    return total;
+  }
+
   function computePosStats(){
     var dates = Object.keys(state.dailyClosings||{});
     var lastNet = null;
     if(dates.length){
       var lastDate = dates.sort().slice(-1)[0];
       var c = state.dailyClosings[lastDate];
-      lastNet = (Number(c.sales)||0) - expensesTotal(c);
+      lastNet = (Number(c.sales)||0) - expensesTotal(c) - dailyWagesPaid(lastDate);
     }
     return {daysCount: dates.length, lastNet: lastNet};
   }
@@ -1437,11 +1447,19 @@
     notesField.appendChild(notesInp);
     card.appendChild(notesField);
 
+    var wagesBox=document.createElement('div');
+    wagesBox.style.cssText='margin-top:14px;padding:10px 18px;background:var(--surface-2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-dim);';
+    var wagesLabel=document.createElement('span'); wagesLabel.textContent='أجور العمال المدفوعة اليوم (من صفحة العمال → الحضور اليومي)';
+    var wagesVal=document.createElement('span'); wagesVal.style.fontWeight='700';
+    wagesVal.textContent = money(dailyWagesPaid(posDate)) + ' ج.م';
+    wagesBox.appendChild(wagesLabel); wagesBox.appendChild(wagesVal);
+    card.appendChild(wagesBox);
+
     var netBox=document.createElement('div');
-    netBox.style.cssText='margin-top:16px;padding:14px 18px;background:var(--accent-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;';
-    var netLabel=document.createElement('span'); netLabel.style.fontWeight='700'; netLabel.textContent='صافي الإيراد';
+    netBox.style.cssText='margin-top:10px;padding:14px 18px;background:var(--accent-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;';
+    var netLabel=document.createElement('span'); netLabel.style.fontWeight='700'; netLabel.textContent='صافي الإيراد (بعد المصاريف والأجور)';
     netVal=document.createElement('span'); netVal.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:20px;color:var(--accent);';
-    function recomputeNet(){ netVal.textContent = money((Number(closing.sales)||0) - expensesTotal(closing)) + ' ج.م'; }
+    function recomputeNet(){ netVal.textContent = money((Number(closing.sales)||0) - expensesTotal(closing) - dailyWagesPaid(posDate)) + ' ج.م'; }
     recomputeNet();
     netBox.appendChild(netLabel); netBox.appendChild(netVal);
     card.appendChild(netBox);
@@ -1460,13 +1478,14 @@
       container.appendChild(histTitle);
       var scroll=document.createElement('div'); scroll.className='table-scroll';
       var table=document.createElement('table'); table.className='ing-master';
-      var thead=document.createElement('tr'); thead.innerHTML='<th>اليوم</th><th>المبيعات</th><th>المصاريف</th><th>صافي الإيراد</th>';
+      var thead=document.createElement('tr'); thead.innerHTML='<th>اليوم</th><th>المبيعات</th><th>المصاريف</th><th>الأجور</th><th>صافي الإيراد</th>';
       table.appendChild(thead);
       histDates.slice(0,14).forEach(function(d){
         var c=state.dailyClosings[d];
-        var net=(Number(c.sales)||0)-expensesTotal(c);
+        var wages=dailyWagesPaid(d);
+        var net=(Number(c.sales)||0)-expensesTotal(c)-wages;
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+d+'</td><td>'+money(c.sales||0)+'</td><td>'+money(expensesTotal(c))+'</td><td style="font-weight:700;">'+money(net)+'</td>';
+        tr.innerHTML='<td>'+d+'</td><td>'+money(c.sales||0)+'</td><td>'+money(expensesTotal(c))+'</td><td>'+money(wages)+'</td><td style="font-weight:700;">'+money(net)+'</td>';
         table.appendChild(tr);
       });
       scroll.appendChild(table); container.appendChild(scroll);
