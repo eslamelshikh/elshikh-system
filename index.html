@@ -2065,7 +2065,7 @@
     }
   }
 
-  init();
+  init().catch(function(e){ console.error('INIT FAILED', e && e.stack || e); });
 })();
 </script>
 
