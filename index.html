@@ -3,18 +3,2072 @@
 <head>
 <meta charset="UTF-8">
 <title>ELSHIKH SYSTEM</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&amp;family=Tajawal:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
-  body{font-family:Tahoma,Arial,sans-serif;background:#F4F2ED;color:#211E19;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:20px;}
-  .box{background:#fff;border-radius:14px;padding:32px 28px;box-shadow:0 4px 16px rgba(0,0,0,.08);max-width:420px;}
-  h1{font-size:20px;margin:0 0 10px;}
-  p{color:#6E6858;font-size:14px;line-height:1.6;}
+  :root{
+    --bg:#F4F2ED;
+    --surface:#FFFFFF;
+    --surface-2:#EDEAE2;
+    --sidebar:#211E19;
+    --sidebar-ink:#EDE7DA;
+    --sidebar-ink-dim:#9C947F;
+    --sidebar-line:#37322A;
+    --ink:#211E19;
+    --ink-dim:#6E6858;
+    --ink-faint:#9A937F;
+    --line:#DEDACC;
+    --accent:#B07A1E;
+    --accent-2:#8F5B14;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#F4E4C4;
+    --good:#2F7A4D;
+    --good-soft:#DFF0E4;
+    --warn:#B23B3B;
+    --warn-soft:#F6DEDE;
+    --info:#2F6FA3;
+    --info-soft:#DEEBF6;
+    --shadow-sm: 0 1px 2px rgba(33,30,25,.06);
+    --shadow-md: 0 1px 2px rgba(33,30,25,.05), 0 8px 24px rgba(33,30,25,.07);
+    --shadow-lg: 0 4px 10px rgba(33,30,25,.08), 0 18px 48px rgba(33,30,25,.10);
+    --radius:14px;
+    --radius-sm:10px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#171512;--surface:#211E19;--surface-2:#28241D;
+      --sidebar:#100F0C;--sidebar-line:#2A261F;
+      --ink:#F1ECE3;--ink-dim:#B4AC9A;--ink-faint:#847C68;--line:#3A352A;
+      --accent:#D99A3E;--accent-2:#E9B15E;--accent-ink:#211501;--accent-soft:#3C2E12;
+      --good:#5FBE83;--good-soft:#1E3327;--warn:#E28080;--warn-soft:#3A2323;
+      --info:#7FB1DE;--info-soft:#1E2A38;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+      --shadow-md: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,.35), 0 24px 60px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#171512;--surface:#211E19;--surface-2:#28241D;
+    --sidebar:#100F0C;--sidebar-line:#2A261F;
+    --ink:#F1ECE3;--ink-dim:#B4AC9A;--ink-faint:#847C68;--line:#3A352A;
+    --accent:#D99A3E;--accent-2:#E9B15E;--accent-ink:#211501;--accent-soft:#3C2E12;
+    --good:#5FBE83;--good-soft:#1E3327;--warn:#E28080;--warn-soft:#3A2323;
+    --info:#7FB1DE;--info-soft:#1E2A38;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-md: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+    --shadow-lg: 0 6px 16px rgba(0,0,0,.35), 0 24px 60px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:"Tajawal","Segoe UI",Tahoma,sans-serif;
+    font-variant-numeric: tabular-nums;line-height:1.5;min-height:100vh;
+  }
+  h1,h2,h3,.brand-name{font-family:"Cairo","Tajawal",sans-serif;}
+
+  .shell{display:flex;min-height:100vh;}
+
+  aside.sidebar{
+    width:252px;flex:none;background:var(--sidebar);color:var(--sidebar-ink);
+    display:flex;flex-direction:column;padding:22px 16px;gap:22px;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+  }
+  .brand{display:flex;align-items:center;gap:11px;padding:0 4px;}
+  .brand .mark{
+    width:40px;height:40px;border-radius:11px;
+    background:linear-gradient(155deg, var(--accent-2), var(--accent));
+    display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;box-shadow:var(--shadow-sm);
+  }
+  .brand-name{font-size:15.5px;font-weight:800;color:#fff;line-height:1.25;}
+  .brand-sub{font-size:11.5px;color:var(--sidebar-ink-dim);font-weight:500;margin-top:1px;}
+  .side-section-label{
+    font-size:11px;font-weight:700;color:var(--sidebar-ink-dim);
+    text-transform:uppercase;letter-spacing:.06em;padding:0 10px;margin-bottom:6px;
+  }
+  nav.modules{display:flex;flex-direction:column;gap:3px;}
+  .mod{
+    display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;
+    font-size:13.5px;font-weight:600;color:var(--sidebar-ink-dim);cursor:pointer;
+    transition:.15s;position:relative;border:0;background:none;width:100%;text-align:start;font-family:inherit;
+  }
+  .mod .ic{font-size:16px;width:20px;text-align:center;flex:none;}
+  .mod.active{background:rgba(217,154,62,.14);color:#fff;}
+  .mod.soon{opacity:.55;cursor:not-allowed;}
+  .mod.soon .tag{
+    margin-inline-start:auto;font-size:9.5px;font-weight:700;background:var(--sidebar-line);
+    color:var(--sidebar-ink-dim);padding:2px 7px;border-radius:999px;letter-spacing:.02em;
+  }
+  .side-foot{margin-top:auto;padding:12px 10px 2px;border-top:1px solid var(--sidebar-line);}
+  .branch-pill{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--sidebar-ink-dim);}
+  .branch-pill b{color:#fff;font-weight:700;}
+  .branch-dot{width:7px;height:7px;border-radius:50%;background:var(--good);}
+
+  main.main{flex:1;min-width:0;}
+  .wrap{max-width:1040px;margin:0 auto;padding:30px 28px 90px;}
+
+  header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  header.top h1{font-size:22px;margin:0 0 4px;font-weight:800;letter-spacing:-.01em;}
+  header.top p{margin:0;font-size:13.5px;color:var(--ink-dim);font-weight:500;}
+
+  .save-status{
+    font-size:12.5px;color:var(--ink-dim);display:flex;align-items:center;gap:7px;
+    background:var(--surface);border:1px solid var(--line);padding:7px 13px;border-radius:999px;
+    box-shadow:var(--shadow-sm);flex:none;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none;transition:.2s;}
+  .dot.busy{background:var(--accent);animation:pulse 1s ease-in-out infinite;}
+  .dot.off{background:var(--ink-faint);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm);}
+  .stat .num{font-family:"Cairo",sans-serif;font-weight:800;font-size:26px;line-height:1;}
+  .stat .lbl{font-size:12.5px;color:var(--ink-dim);margin-top:7px;font-weight:600;}
+  .stat.warn .num{color:var(--warn);}
+  .stat.accent .num{color:var(--accent);}
+
+  nav.tabs{display:flex;gap:5px;background:var(--surface-2);padding:5px;border-radius:12px;margin-bottom:20px;flex-wrap:wrap;}
+  nav.tabs button{
+    font-family:"Cairo",sans-serif;font-weight:700;font-size:14px;border:0;background:transparent;color:var(--ink-dim);
+    padding:9px 16px;border-radius:9px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:7px;
+  }
+  nav.tabs button.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);}
+  nav.tabs button:hover:not(.active){color:var(--ink);}
+
+  .cat-note{
+    background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:12px 16px;font-size:13.5px;
+    margin-bottom:18px;line-height:1.6;border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .cat-note.info{background:var(--info-soft);border-color:color-mix(in srgb, var(--info) 35%, transparent);}
+  .cat-note b{color:var(--accent);}
+
+  .item-list{display:flex;flex-direction:column;gap:10px;}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:17px 19px;
+    box-shadow:var(--shadow-sm);transition:box-shadow .15s;animation:fadeUp .28s ease both;
+  }
+  @media (prefers-reduced-motion: reduce){ .card{animation:none;} }
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card:hover{box-shadow:var(--shadow-md);}
+  .card .row-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .card .title-line{display:flex;align-items:center;gap:10px;}
+  .cat-icon{width:34px;height:34px;border-radius:9px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none;}
+  .card h3{margin:0;font-size:16.5px;font-weight:700;}
+  .price{font-family:"Cairo",sans-serif;font-weight:800;font-size:17px;color:var(--accent);white-space:nowrap;}
+  .price small{font-size:12px;color:var(--ink-dim);font-weight:500;}
+  .flag{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;background:var(--warn-soft);
+    color:var(--warn);padding:3px 9px;border-radius:999px;margin-inline-start:8px;vertical-align:middle;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;margin-inline-start:44px;}
+  .chip{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;display:flex;align-items:center;gap:6px;}
+  .chip b{font-weight:700;}
+  .chip .qty{color:var(--ink-dim);}
+  .chip .rm{cursor:pointer;color:var(--ink-faint);font-size:14px;line-height:1;border:0;background:none;padding:0 2px;}
+  .chip .rm:hover{color:var(--warn);}
+
+  .icon-btn{
+    border:0;background:var(--surface-2);color:var(--ink-dim);width:32px;height:32px;border-radius:9px;
+    cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:.15s;flex:none;
+  }
+  .icon-btn:hover{background:var(--accent-soft);color:var(--accent);}
+  .row-actions{display:flex;gap:6px;}
+
+  .edit-panel{margin-top:14px;border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:10px;}
+  .field-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;}
+  .field.small{flex:0 0 90px;min-width:80px;}
+  .field label{font-size:11.5px;color:var(--ink-dim);font-weight:700;}
+  input,select{
+    font-family:inherit;font-size:14px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;
+  }
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .ing-edit-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap;background:var(--surface-2);padding:10px;border-radius:9px;}
+  .ing-list-edit{display:flex;flex-direction:column;gap:8px;}
+  .ing-line{display:flex;gap:8px;align-items:center;}
+  .ing-line span{flex:1;font-size:13.5px;}
+  .btn{font-family:"Cairo",sans-serif;font-weight:700;font-size:13.5px;border-radius:9px;padding:9px 16px;cursor:pointer;border:1px solid transparent;transition:.15s;}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);}
+  .btn.primary:hover{filter:brightness(1.06);}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--ink-dim);}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--ink-faint);}
+  .actions-end{display:flex;justify-content:flex-end;gap:8px;}
+  .add-item-bar{margin-top:14px;}
+
+  table.ing-master, table.grid-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);}
+  table.ing-master th, table.grid-table th{background:var(--surface-2);text-align:start;font-size:12.5px;color:var(--ink-dim);padding:11px 14px;font-weight:700;white-space:nowrap;}
+  table.ing-master td, table.grid-table td{padding:9px 12px;border-top:1px solid var(--line);font-size:14px;vertical-align:middle;}
+  table.ing-master tr:hover td{background:var(--surface-2);}
+  .used-in{color:var(--ink-dim);font-size:12.5px;}
+  table.grid-table input{padding:7px 9px;font-size:13.5px;min-width:76px;}
+  table.grid-table td.name-cell{font-weight:600;white-space:nowrap;}
+  table.grid-table .unit-tag{font-size:11px;color:var(--ink-faint);font-weight:500;}
+
+  .table-scroll{overflow-x:auto;border-radius:var(--radius);}
+  .empty{color:var(--ink-faint);font-size:13.5px;padding:30px;text-align:center;}
+
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .date-field{display:flex;align-items:center;gap:9px;}
+  .date-field label{font-size:13px;font-weight:700;color:var(--ink-dim);}
+  .date-field input{width:auto;}
+  .subtabs{display:flex;gap:6px;margin-bottom:16px;}
+  .subtabs button{
+    font-family:"Cairo",sans-serif;font-weight:700;font-size:13px;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink-dim);padding:8px 14px;border-radius:9px;cursor:pointer;
+  }
+  .subtabs button.active{background:var(--ink);color:var(--surface);border-color:var(--ink);}
+
+  footer.hint{margin-top:28px;font-size:12.5px;color:var(--ink-faint);text-align:center;line-height:1.7;}
+
+  .cash-shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px 16px 60px;}
+  .cash-wrap{width:100%;max-width:460px;}
+  .cash-brand{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:22px;text-align:center;}
+  .cash-brand .mark{width:52px;height:52px;border-radius:14px;background:linear-gradient(155deg, var(--accent-2), var(--accent));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:var(--shadow-md);}
+  .cash-brand h1{font-size:19px;margin:0;font-weight:800;}
+  .cash-brand p{font-size:12.5px;color:var(--ink-dim);margin:0;}
+  .cash-staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .cash-staff-btn{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 12px;font-family:"Cairo",sans-serif;font-weight:700;font-size:15px;cursor:pointer;box-shadow:var(--shadow-sm);}
+  .cash-staff-btn:hover{border-color:var(--accent);}
+  .cash-pinpad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;}
+  .cash-pinpad button{font-family:"Cairo",sans-serif;font-size:20px;font-weight:700;padding:16px 0;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;}
+  .cash-pinpad button:active{background:var(--accent-soft);}
+  .cash-pin-dots{display:flex;justify-content:center;gap:12px;margin:14px 0;}
+  .cash-pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ink-faint);}
+  .cash-pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+  .cash-header{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:16px;}
+  .cash-header .who{font-family:"Cairo",sans-serif;font-weight:800;font-size:15px;}
+  .cash-net{background:var(--accent-soft);border-radius:var(--radius);padding:22px;text-align:center;margin-bottom:6px;}
+  .cash-net .lbl{font-size:13px;color:var(--ink-dim);font-weight:600;margin-bottom:6px;}
+  .cash-net .val{font-family:"Cairo",sans-serif;font-weight:800;font-size:32px;color:var(--accent);}
+  .cash-sync-note{text-align:center;font-size:11.5px;color:var(--ink-faint);margin-bottom:18px;}
+  .cash-section{margin-bottom:20px;}
+  .cash-section h3{font-size:15px;margin:0 0 10px;}
+  .cash-item-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:7px;}
+  .cash-item-row .nm{font-size:14px;font-weight:600;}
+  .cash-item-row .pr{font-size:11.5px;color:var(--ink-dim);}
+  .cash-item-row input{width:64px;text-align:center;flex:none;}
+  .cash-stepper{display:flex;align-items:center;gap:0;flex:none;}
+  .cash-step-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2);font-family:"Cairo",sans-serif;font-size:19px;font-weight:800;color:var(--ink);cursor:pointer;line-height:1;}
+  .cash-step-btn:active{background:var(--accent-soft);border-color:var(--accent);}
+  .cash-step-btn.plus{color:var(--accent-2);}
+  .cash-step-count{width:38px;text-align:center;font-family:"Cairo",sans-serif;font-weight:800;font-size:16px;cursor:pointer;}
+  .cash-cart-subtotal{font-family:"Cairo",sans-serif;font-weight:700;font-size:14px;color:var(--accent-2);background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin-bottom:10px;text-align:center;}
+  .order-log-row{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:6px;}
+  .order-log-row .olr-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--ink-dim);margin-bottom:3px;}
+  .order-log-row .olr-top b{color:var(--accent-2);font-family:"Cairo",sans-serif;}
+  .order-log-row .olr-items{font-size:13px;font-weight:600;}
+  .cash-exit-link{margin-top:26px;font-size:12px;color:var(--ink-faint);text-align:center;text-decoration:underline;cursor:pointer;background:none;border:0;}
+
+  .chart-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);margin-bottom:18px;}
+  .chart-card h3{margin:0 0 14px;font-size:14.5px;}
+  .bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;border-bottom:1px solid var(--line);padding-bottom:2px;overflow-x:auto;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:18px;}
+  .bar{width:100%;max-width:26px;border-radius:4px 4px 0 0;background:var(--accent);transition:height .2s;min-height:2px;}
+  .bar.neg{background:var(--warn);}
+  .bar-label{font-size:9.5px;color:var(--ink-faint);margin-top:6px;white-space:nowrap;}
+  .section-title{margin:24px 0 10px;font-size:15px;font-weight:700;}
+  .section-title:first-child{margin-top:0;}
+
+  @media (max-width: 760px){
+    .shell{flex-direction:column;}
+    aside.sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;padding:14px 16px;gap:16px;}
+    .side-section-label{display:none;}
+    nav.modules{flex-direction:row;}
+    .side-foot{display:none;}
+    .stats-row{grid-template-columns:1fr 1fr;}
+  }
 </style>
-</head>
-<body>
-  <div class="box">
-    <h1>🍽️ ELSHIKH SYSTEM</h1>
-    <p>الاستضافة شغالة. النظام الكامل جاي دلوقتي.</p>
-  </div>
-</body>
-</html>
+
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">🍽️</div>
+      <div>
+        <div class="brand-name">ELSHIKH SYSTEM</div>
+        <div class="brand-sub">فرع 1</div>
+      </div>
+    </div>
+    <div>
+      <div class="side-section-label">الوحدات</div>
+      <nav class="modules" id="modulesNav"></nav>
+    </div>
+    <div class="side-foot">
+      <div class="branch-pill"><span class="branch-dot"></span> متصل — <b>فرع 1</b></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <h1 id="pageTitle">المنيو والوصفات</h1>
+          <p id="pageSub">المنيو، وكل صنف مربوط بالخامات اللي بتدخل فيه</p>
+        </div>
+        <div class="save-status" id="saveStatus">
+          <span class="dot off" id="saveDot"></span>
+          <span id="saveText">جاهز</span>
+        </div>
+      </header>
+
+      <div class="stats-row" id="statsRow"></div>
+      <div id="moduleBody"></div>
+
+      <footer class="hint" id="pageHint">التعديلات بتتحفظ لكل اللي بيفتحوا الصفحة دي.<br>الأصناف اللي عليها علامة "⚠ محتاج مراجعة" أنا لسه مش متأكد 100% من كل كمياتها من الصورة اللي بعتها — كمّلها براحتك من زرار التعديل.</footer>
+    </div>
+  </main>
+</div>
+
+<div id="cashRoot" style="display:none;"></div>
+
+
+<div id="loadingScreen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Tahoma,Arial,sans-serif;font-size:15px;color:#6E6858;">⏳ بيتحمل...</div>
+<script>
+(function(){
+  var BACKEND_URL = 'https://script.google.com/macros/s/AKfycby1zgS_qWHCPEhAadal4meaFqmvvz8n771P38OuaHubwoHqwpK9-TC8-azeV-akCjYDBg/exec';
+  var state = null;
+  var dataVersion = 0;
+
+  var currentModule = 'menu';
+  var activeCat = null;
+  var editingId = null;
+  var addingCategory = null;
+  var pendingIngredients = [];
+
+  var invSubtab = 'stock';
+  var stockDate = toLocalDateStr(new Date());
+  var prodDate = toLocalDateStr(new Date());
+  var staffSubtab = 'attendance';
+  var staffDate = toLocalDateStr(new Date());
+  var posDate = toLocalDateStr(new Date());
+  var selectedSupplierId = null;
+
+  var CAT_ICON = {meals:'🍗', sandwiches:'🥙', tassa:'🍢'};
+
+  function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+  function itemsFor(cat){ return state.items.filter(function(i){return i.category===cat;}); }
+  function money(n){ return Number(n).toLocaleString('en-US'); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=s==null?'':s; return d.innerHTML; }
+
+  /* ================= SIDEBAR / MODULES ================= */
+  var MODULES = [
+    {id:'menu', icon:'📖', label:'المنيو والوصفات', ready:true},
+    {id:'inventory', icon:'📦', label:'المخزون والموردين', ready:true},
+    {id:'staff', icon:'👥', label:'العمال', ready:true},
+    {id:'pos', icon:'🧾', label:'الإقفال اليومي', ready:true},
+    {id:'reports', icon:'📊', label:'التقارير والتحليلات', ready:true},
+    {id:'delivery', icon:'🚚', label:'التوصيل', ready:false}
+  ];
+
+  function renderSidebar(){
+    var nav = document.getElementById('modulesNav');
+    nav.innerHTML='';
+    MODULES.forEach(function(m){
+      var b = document.createElement('button');
+      b.className = 'mod' + (m.id===currentModule?' active':'') + (!m.ready?' soon':'');
+      b.innerHTML = '<span class="ic">'+m.icon+'</span><span>'+m.label+'</span>' + (!m.ready?'<span class="tag">قريبًا</span>':'');
+      if(!m.ready){ b.title='هيتضاف بعدين'; b.disabled=true; }
+      else { b.onclick=function(){ currentModule=m.id; editingId=null; addingCategory=null; render(); }; }
+      nav.appendChild(b);
+    });
+  }
+
+  /* ================= MENU MODULE ================= */
+  function computeMenuStats(){
+    var ingSet={}, reviewCount=0;
+    state.items.forEach(function(it){
+      if(it.needsReview) reviewCount++;
+      it.ingredients.forEach(function(ing){ ingSet[ing.name]=true; });
+    });
+    return {itemCount:state.items.length, ingCount:Object.keys(ingSet).length, reviewCount:reviewCount};
+  }
+
+  function renderMenuStats(){
+    var s = computeMenuStats();
+    return '<div class="stat"><div class="num">'+s.itemCount+'</div><div class="lbl">إجمالي الأصناف في المنيو</div></div>'+
+      '<div class="stat accent"><div class="num">'+s.ingCount+'</div><div class="lbl">خامة مختلفة مستخدمة</div></div>'+
+      '<div class="stat'+(s.reviewCount>0?' warn':'')+'"><div class="num">'+s.reviewCount+'</div><div class="lbl">صنف محتاج مراجعة كمياته</div></div>';
+  }
+
+  function renderMenuTabs(container){
+    var nav = document.createElement('nav'); nav.className='tabs';
+    state.categories.forEach(function(c){
+      var b = document.createElement('button');
+      b.innerHTML = '<span>'+(CAT_ICON[c.id]||'')+'</span><span>'+c.label+'</span>';
+      if(c.id===activeCat) b.className='active';
+      b.onclick=function(){ activeCat=c.id; editingId=null; addingCategory=null; render(); };
+      nav.appendChild(b);
+    });
+    container.appendChild(nav);
+
+    {
+      var cat = state.categories.find(function(c){return c.id===activeCat;});
+      if(cat && cat.note){
+        var note=document.createElement('div'); note.className='cat-note'; note.innerHTML=cat.note;
+        container.appendChild(note);
+      }
+    }
+  }
+
+  function ingChip(item, ing, idx){
+    var chip = document.createElement('span'); chip.className='chip';
+    chip.innerHTML = '<b>'+esc(ing.name)+'</b><span class="qty">'+esc(ing.qty)+' '+esc(ing.unit)+'</span>';
+    var rm = document.createElement('button'); rm.className='rm'; rm.textContent='✕'; rm.title='احذف';
+    rm.onclick=function(e){ e.stopPropagation(); item.ingredients.splice(idx,1); persist(); render(); };
+    chip.appendChild(rm);
+    return chip;
+  }
+
+  function renderViewCard(item){
+    var card=document.createElement('div'); card.className='card';
+    var top=document.createElement('div'); top.className='row-top';
+    var titleLine=document.createElement('div'); titleLine.className='title-line';
+    var icon=document.createElement('div'); icon.className='cat-icon'; icon.textContent=CAT_ICON[item.category]||'🍽️';
+    titleLine.appendChild(icon);
+    var h3=document.createElement('h3'); h3.textContent=item.name;
+    if(item.needsReview){ var f=document.createElement('span'); f.className='flag'; f.textContent='⚠ محتاج مراجعة'; h3.appendChild(f); }
+    titleLine.appendChild(h3);
+    top.appendChild(titleLine);
+
+    var right=document.createElement('div'); right.style.display='flex'; right.style.alignItems='center'; right.style.gap='10px';
+    var price=document.createElement('div'); price.className='price'; price.innerHTML=money(item.price)+' <small>ج.م</small>';
+    right.appendChild(price);
+    var actions=document.createElement('div'); actions.className='row-actions';
+    var editBtn=document.createElement('button'); editBtn.className='icon-btn'; editBtn.textContent='✎'; editBtn.title='تعديل';
+    editBtn.onclick=function(){ editingId=item.id; addingCategory=null; pendingIngredients=item.ingredients.map(function(x){return Object.assign({},x);}); render(); };
+    var delBtn=document.createElement('button'); delBtn.className='icon-btn'; delBtn.textContent='🗑'; delBtn.title='حذف';
+    delBtn.onclick=function(){ if(confirm('تحذف "'+item.name+'"؟')){ state.items=state.items.filter(function(x){return x.id!==item.id;}); persist(); render(); } };
+    actions.appendChild(editBtn); actions.appendChild(delBtn);
+    right.appendChild(actions);
+    top.appendChild(right);
+    card.appendChild(top);
+
+    var chips=document.createElement('div'); chips.className='chips';
+    if(item.ingredients.length===0){
+      var e=document.createElement('span'); e.className='used-in'; e.textContent='لسه مفيش خامات مضافة';
+      chips.appendChild(e);
+    } else { item.ingredients.forEach(function(ing,idx){ chips.appendChild(ingChip(item,ing,idx)); }); }
+    card.appendChild(chips);
+    return card;
+  }
+
+  function ingEditRow(list, idx, onChange){
+    var row=document.createElement('div'); row.className='ing-line';
+    var span=document.createElement('span'); span.textContent=list[idx].name+' — '+list[idx].qty+' '+list[idx].unit;
+    var rm=document.createElement('button'); rm.className='icon-btn'; rm.textContent='✕';
+    rm.onclick=function(){ list.splice(idx,1); onChange(); };
+    row.appendChild(span); row.appendChild(rm);
+    return row;
+  }
+
+  function materialNameOptions(){
+    return state.materials.map(function(m){return m.name;});
+  }
+
+  function buildEditPanel(item, isNew){
+    var panel=document.createElement('div'); panel.className='edit-panel';
+    var nameField=document.createElement('div'); nameField.className='field'; nameField.innerHTML='<label>اسم الصنف</label>';
+    var nameInput=document.createElement('input'); nameInput.value=item.name||''; nameField.appendChild(nameInput);
+    var priceField=document.createElement('div'); priceField.className='field small'; priceField.innerHTML='<label>السعر (ج.م)</label>';
+    var priceInput=document.createElement('input'); priceInput.type='number'; priceInput.value=item.price||''; priceField.appendChild(priceInput);
+    var row1=document.createElement('div'); row1.className='field-row'; row1.appendChild(nameField); row1.appendChild(priceField);
+    panel.appendChild(row1);
+
+    var ingWrap=document.createElement('div'); ingWrap.className='ing-list-edit';
+    var ingLabel=document.createElement('label'); ingLabel.textContent='الخامات المستخدمة'; ingLabel.style.fontSize='11.5px'; ingLabel.style.color='var(--ink-dim)'; ingLabel.style.fontWeight='700';
+    ingWrap.appendChild(ingLabel);
+
+    function refreshIngList(){
+      Array.from(ingWrap.querySelectorAll('.ing-line')).forEach(function(n){n.remove();});
+      pendingIngredients.forEach(function(_,idx){ ingWrap.appendChild(ingEditRow(pendingIngredients, idx, function(){ rebuild(); })); });
+    }
+    function rebuild(){ var newPanel=buildEditPanel(item, isNew); panel.replaceWith(newPanel); }
+    refreshIngList();
+    panel.appendChild(ingWrap);
+
+    var addRow=document.createElement('div'); addRow.className='ing-edit-row';
+    var nField=document.createElement('div'); nField.className='field'; nField.innerHTML='<label>اسم الخامة</label>';
+    var nInput=document.createElement('input'); nInput.setAttribute('list','materials-datalist'); nInput.placeholder='مثال: كفتة'; nField.appendChild(nInput);
+    var qField=document.createElement('div'); qField.className='field small'; qField.innerHTML='<label>الكمية</label>';
+    var qInput=document.createElement('input'); qInput.placeholder='مثال: 100'; qField.appendChild(qInput);
+    var uField=document.createElement('div'); uField.className='field small'; uField.innerHTML='<label>الوحدة</label>';
+    var uSelect=document.createElement('select');
+    ['جم','كجم','مل','لتر','عدد'].forEach(function(u){ var o=document.createElement('option'); o.value=u; o.textContent=u; uSelect.appendChild(o); });
+    uField.appendChild(uSelect);
+    var addBtn=document.createElement('button'); addBtn.className='btn primary'; addBtn.textContent='+ أضف';
+    addBtn.onclick=function(){
+      if(!nInput.value.trim()||!qInput.value.trim()) return;
+      pendingIngredients.push({name:nInput.value.trim(), qty:qInput.value.trim(), unit:uSelect.value});
+      rebuild();
+    };
+    addRow.appendChild(nField); addRow.appendChild(qField); addRow.appendChild(uField); addRow.appendChild(addBtn);
+    panel.appendChild(addRow);
+
+    var endActions=document.createElement('div'); endActions.className='actions-end';
+    var cancelBtn=document.createElement('button'); cancelBtn.className='btn ghost'; cancelBtn.textContent='إلغاء';
+    cancelBtn.onclick=function(){ editingId=null; addingCategory=null; render(); };
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent=isNew?'إضافة الصنف':'حفظ التعديل';
+    saveBtn.onclick=function(){
+      if(!nameInput.value.trim()){ nameInput.focus(); return; }
+      var newData={ name:nameInput.value.trim(), price:Number(priceInput.value)||0, ingredients:pendingIngredients.slice(), needsReview:pendingIngredients.length===0 };
+      if(isNew){ state.items.push(Object.assign({id:uid('it'), category:activeCat}, newData)); addingCategory=null; }
+      else { Object.assign(item, newData); editingId=null; }
+      persist(); render();
+    };
+    endActions.appendChild(cancelBtn); endActions.appendChild(saveBtn);
+    panel.appendChild(endActions);
+    return panel;
+  }
+
+  function renderEditCard(item, isNew){
+    var card=document.createElement('div'); card.className='card';
+    var title=document.createElement('h3'); title.style.marginBottom='6px';
+    title.textContent = isNew ? 'صنف جديد' : ('تعديل: '+item.name);
+    card.appendChild(title);
+    card.appendChild(buildEditPanel(item, isNew));
+    return card;
+  }
+
+  function renderMenuModule(container){
+    document.getElementById('pageTitle').textContent='المنيو والوصفات';
+    document.getElementById('pageSub').textContent='المنيو، وكل صنف مربوط بالخامات اللي بتدخل فيه';
+    document.getElementById('pageHint').innerHTML='التعديلات بتتحفظ لكل اللي بيفتحوا الصفحة دي.<br>الأصناف اللي عليها علامة "⚠ محتاج مراجعة" أنا لسه مش متأكد 100% من كل كمياتها من الصورة اللي بعتها — كمّلها براحتك من زرار التعديل.';
+    document.getElementById('statsRow').innerHTML = renderMenuStats();
+
+    renderMenuTabs(container);
+
+    var list=document.createElement('div'); list.className='item-list';
+    var items=itemsFor(activeCat);
+    if(items.length===0 && addingCategory!==activeCat){
+      var e=document.createElement('div'); e.className='empty'; e.textContent='لسه مفيش أصناف في القسم ده.';
+      list.appendChild(e);
+    }
+    items.forEach(function(item){
+      if(editingId===item.id){ list.appendChild(renderEditCard(item,false)); }
+      else { list.appendChild(renderViewCard(item)); }
+    });
+    container.appendChild(list);
+
+    var addBar=document.createElement('div'); addBar.className='add-item-bar';
+    if(addingCategory===activeCat){
+      addBar.appendChild(renderEditCard({name:'',price:0,ingredients:[]}, true));
+    } else {
+      var addBtn=document.createElement('button'); addBtn.className='btn ghost'; addBtn.textContent='+ إضافة صنف جديد';
+      addBtn.onclick=function(){ addingCategory=activeCat; editingId=null; pendingIngredients=[]; render(); };
+      addBar.appendChild(addBtn);
+    }
+    container.appendChild(addBar);
+
+    var datalist=document.createElement('datalist'); datalist.id='materials-datalist';
+    materialNameOptions().forEach(function(n){ var o=document.createElement('option'); o.value=n; datalist.appendChild(o); });
+    container.appendChild(datalist);
+  }
+
+  /* ================= INVENTORY MODULE ================= */
+  function ensureDayLog(store, date, keyList, fields){
+    if(!store[date]) store[date]={};
+    keyList.forEach(function(k){
+      if(!store[date][k]) store[date][k]={};
+      fields.forEach(function(f){ if(store[date][k][f]===undefined) store[date][k][f]=''; });
+    });
+    return store[date];
+  }
+
+  function computeInvStats(){
+    var daysLogged = Object.keys(state.stockLogs||{}).length;
+    return {matCount: state.materials.length, daysLogged: daysLogged};
+  }
+
+  function renderInvStats(){
+    var s = computeInvStats();
+    return '<div class="stat"><div class="num">'+s.matCount+'</div><div class="lbl">خامة ومستلزم في القائمة</div></div>'+
+      '<div class="stat accent"><div class="num">'+s.daysLogged+'</div><div class="lbl">يوم متسجل حركته</div></div>'+
+      '<div class="stat"><div class="num">'+(state.materials.filter(function(m){return m.trackProduction;}).length)+'</div><div class="lbl">صنف بيتسجل بيعه يوميًا</div></div>';
+  }
+
+  function renderInvSubtabs(container){
+    var nav=document.createElement('div'); nav.className='subtabs';
+    var t1=document.createElement('button'); t1.textContent='حركة الخامات اليومية'; t1.className=invSubtab==='stock'?'active':'';
+    t1.onclick=function(){ invSubtab='stock'; render(); };
+    var t2=document.createElement('button'); t2.textContent='مبيعات الأصناف'; t2.className=invSubtab==='production'?'active':'';
+    t2.onclick=function(){ invSubtab='production'; render(); };
+    var t3=document.createElement('button'); t3.textContent='قائمة الخامات'; t3.className=invSubtab==='materials'?'active':'';
+    t3.onclick=function(){ invSubtab='materials'; render(); };
+    var t4=document.createElement('button'); t4.textContent='الموردين'; t4.className=invSubtab==='suppliers'?'active':'';
+    t4.onclick=function(){ invSubtab='suppliers'; render(); };
+    nav.appendChild(t1); nav.appendChild(t2); nav.appendChild(t3); nav.appendChild(t4);
+    container.appendChild(nav);
+  }
+
+  function supplierBalance(supplierId){
+    var entries = state.supplierLedger[supplierId]||[];
+    return entries.reduce(function(sum,e){ return sum + (e.type==='فاتورة' ? (Number(e.amount)||0) : -(Number(e.amount)||0)); },0);
+  }
+
+  function renderSuppliersView(container){
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='بيانات كل مورد وحسابه في مكان واحد. طريقة الدفع: <b>كاش</b> = بيتدفع في نفس اللحظة. <b>تقفيل الفاتورة اللي قبلها</b> = حساب مفتوح، سجّل فاتورة أو دفعة تحت كل مورد والرصيد بيتحسب لوحده.';
+    container.appendChild(note);
+
+    state.suppliers.forEach(function(s, idx){
+      var card=document.createElement('div'); card.className='card'; card.style.marginBottom='14px';
+
+      var top=document.createElement('div'); top.className='row-top';
+      var titleLine=document.createElement('div'); titleLine.className='title-line';
+      var icon=document.createElement('div'); icon.className='cat-icon'; icon.textContent='🚚';
+      titleLine.appendChild(icon);
+      var h3=document.createElement('h3'); h3.textContent=s.name||'(بدون اسم)';
+      titleLine.appendChild(h3);
+      top.appendChild(titleLine);
+
+      var bal = supplierBalance(s.id);
+      var balBadge=document.createElement('div');
+      balBadge.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:16px;'+(bal>0?'color:var(--warn);':'color:var(--good);');
+      balBadge.textContent = (bal>0? 'مستحق عليك ':'الرصيد ') + money(bal) + ' ج.م';
+      top.appendChild(balBadge);
+      card.appendChild(top);
+
+      var fieldsRow=document.createElement('div'); fieldsRow.className='field-row'; fieldsRow.style.marginTop='12px';
+      function smallField(label, value, onInput, placeholder){
+        var f=document.createElement('div'); f.className='field';
+        f.innerHTML='<label>'+label+'</label>';
+        var inp=document.createElement('input'); inp.value=value||''; if(placeholder) inp.placeholder=placeholder;
+        inp.oninput=function(){ onInput(inp.value); };
+        f.appendChild(inp);
+        return f;
+      }
+      fieldsRow.appendChild(smallField('بيوريد إيه', s.suppliesFor, function(v){ s.suppliesFor=v; }));
+      var payField=document.createElement('div'); payField.className='field';
+      payField.innerHTML='<label>طريقة الدفع</label>';
+      var paySelect=document.createElement('select');
+      [['كاش','كاش'],['tab','تقفيل الفاتورة اللي قبلها']].forEach(function(p){
+        var o=document.createElement('option'); o.value=p[1]; o.textContent=p[1];
+        if(s.paymentTerms===p[1]) o.selected=true;
+        paySelect.appendChild(o);
+      });
+      paySelect.onchange=function(){ s.paymentTerms=paySelect.value; };
+      payField.appendChild(paySelect);
+      fieldsRow.appendChild(payField);
+      fieldsRow.appendChild(smallField('تليفون', s.phone, function(v){ s.phone=v; }, 'رقم التليفون'));
+      card.appendChild(fieldsRow);
+
+      var fieldsRow2=document.createElement('div'); fieldsRow2.className='field-row';
+      fieldsRow2.appendChild(smallField('ملاحظات', s.notes, function(v){ s.notes=v; }));
+      card.appendChild(fieldsRow2);
+
+      var ledgerLabel=document.createElement('label'); ledgerLabel.textContent='حساب المورد'; ledgerLabel.style.cssText='font-size:11.5px;color:var(--ink-dim);font-weight:700;display:block;margin:14px 0 8px;';
+      card.appendChild(ledgerLabel);
+
+      var entries = state.supplierLedger[s.id]||(state.supplierLedger[s.id]=[]);
+      if(entries.length){
+        var scroll=document.createElement('div'); scroll.className='table-scroll';
+        var table=document.createElement('table'); table.className='ing-master';
+        table.innerHTML='<tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>المبلغ</th><th></th></tr>';
+        entries.forEach(function(en, eidx){
+          var tr=document.createElement('tr');
+          tr.innerHTML='<td>'+esc(en.date)+'</td><td>'+esc(en.desc)+'</td><td>'+esc(en.type)+'</td><td>'+money(en.amount)+'</td>';
+          var tdDel=document.createElement('td');
+          var del=document.createElement('button'); del.className='icon-btn'; del.textContent='🗑';
+          del.onclick=function(){ entries.splice(eidx,1); persist(); render(); };
+          tdDel.appendChild(del); tr.appendChild(tdDel);
+          table.appendChild(tr);
+        });
+        scroll.appendChild(table); card.appendChild(scroll);
+      } else {
+        var e=document.createElement('div'); e.className='used-in'; e.style.marginBottom='6px'; e.textContent='لسه مفيش فواتير أو دفعات مسجّلة';
+        card.appendChild(e);
+      }
+
+      var addRow=document.createElement('div'); addRow.className='ing-edit-row'; addRow.style.marginTop='10px';
+      var dField=document.createElement('div'); dField.className='field small'; dField.innerHTML='<label>التاريخ</label>';
+      var dInp=document.createElement('input'); dInp.type='date'; dInp.value=posDate; dField.appendChild(dInp);
+      var descField=document.createElement('div'); descField.className='field'; descField.innerHTML='<label>البيان</label>';
+      var descInp=document.createElement('input'); descInp.placeholder='مثال: توريد الأسبوع'; descField.appendChild(descInp);
+      var typeField=document.createElement('div'); typeField.className='field small'; typeField.innerHTML='<label>النوع</label>';
+      var typeSel=document.createElement('select');
+      [['فاتورة','فاتورة (بيزود الرصيد)'],['دفعة','دفعة (بتقلل الرصيد)']].forEach(function(p){ var o=document.createElement('option'); o.value=p[0]; o.textContent=p[1]; typeSel.appendChild(o); });
+      typeField.appendChild(typeSel);
+      var amtField=document.createElement('div'); amtField.className='field small'; amtField.innerHTML='<label>المبلغ</label>';
+      var amtInp=document.createElement('input'); amtInp.type='number'; amtInp.step='any'; amtField.appendChild(amtInp);
+      var addBtn=document.createElement('button'); addBtn.className='btn primary'; addBtn.textContent='+ إضافة';
+      addBtn.onclick=function(){
+        if(!amtInp.value) return;
+        entries.push({date:dInp.value||posDate, desc:descInp.value.trim(), type:typeSel.value, amount:Number(amtInp.value)||0});
+        persist(); render();
+      };
+      addRow.appendChild(dField); addRow.appendChild(descField); addRow.appendChild(typeField); addRow.appendChild(amtField); addRow.appendChild(addBtn);
+      card.appendChild(addRow);
+
+      var delSupRow=document.createElement('div'); delSupRow.className='actions-end'; delSupRow.style.marginTop='10px';
+      var delSup=document.createElement('button'); delSup.className='btn ghost'; delSup.textContent='🗑 احذف المورد ده';
+      delSup.onclick=function(){ if(confirm('تحذف "'+s.name+'"؟')){ state.suppliers.splice(idx,1); persist(); render(); } };
+      delSupRow.appendChild(delSup);
+      card.appendChild(delSupRow);
+
+      container.appendChild(card);
+    });
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.gap='10px';
+    var addBtn=document.createElement('button'); addBtn.className='btn ghost'; addBtn.textContent='+ إضافة مورد';
+    addBtn.onclick=function(){ state.suppliers.push({id:uid('sup'), name:'', suppliesFor:'', paymentTerms:'كاش', phone:'', notes:''}); render(); };
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ الموردين';
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(addBtn); actions.appendChild(saveBtn);
+    container.appendChild(actions);
+  }
+
+  function renderStockView(container){
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='بتسجل هنا <b>رصيد بداية اليوم</b> و<b>رصيد نهاية اليوم</b> لكل خامة، وعمود <b>هالك / مرتجع</b> لأي حاجة فسدت أو رجعت (نفس البند). لو رصيد النهاية بعيد عن المتوقع تقدر تكتب السبب في الملاحظات.';
+    container.appendChild(note);
+
+    var toolbar=document.createElement('div'); toolbar.className='toolbar';
+    var df=document.createElement('div'); df.className='date-field';
+    df.innerHTML='<label>اليوم</label>';
+    var dateInput=document.createElement('input'); dateInput.type='date'; dateInput.value=stockDate;
+    dateInput.onchange=function(){ stockDate=dateInput.value; render(); };
+    df.appendChild(dateInput);
+    toolbar.appendChild(df);
+    container.appendChild(toolbar);
+
+    var keyList = state.materials.map(function(m){return m.id;});
+    var dayLog = ensureDayLog(state.stockLogs, stockDate, keyList, ['opening','closing','waste','notes']);
+
+    var scroll=document.createElement('div'); scroll.className='table-scroll';
+    var table=document.createElement('table'); table.className='grid-table';
+    var thead=document.createElement('tr');
+    thead.innerHTML='<th>الخامة</th><th>بداية اليوم</th><th>نهاية اليوم</th><th>هالك / مرتجع</th><th>ملاحظات</th>';
+    table.appendChild(thead);
+
+    state.materials.forEach(function(m){
+      var tr=document.createElement('tr');
+      var tdName=document.createElement('td'); tdName.className='name-cell';
+      tdName.innerHTML=esc(m.name)+' <span class="unit-tag">('+esc(m.unit)+')</span>';
+      tr.appendChild(tdName);
+
+      ['opening','closing','waste'].forEach(function(f){
+        var td=document.createElement('td');
+        var inp=document.createElement('input'); inp.type='number'; inp.step='any';
+        inp.value=dayLog[m.id][f];
+        inp.oninput=function(){ dayLog[m.id][f]=inp.value; };
+        td.appendChild(inp); tr.appendChild(td);
+      });
+      var tdNotes=document.createElement('td');
+      var notesInp=document.createElement('input'); notesInp.type='text'; notesInp.style.minWidth='160px';
+      notesInp.value=dayLog[m.id].notes;
+      notesInp.oninput=function(){ dayLog[m.id].notes=notesInp.value; };
+      tdNotes.appendChild(notesInp); tr.appendChild(tdNotes);
+
+      table.appendChild(tr);
+    });
+    scroll.appendChild(table); container.appendChild(scroll);
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px';
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ حركة يوم '+stockDate;
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(saveBtn);
+    container.appendChild(actions);
+  }
+
+  function ensureOrdersForDate(date){
+    if(!state.orders[date]) state.orders[date]=[];
+    return state.orders[date];
+  }
+
+  function aggregateOrderItems(ordersArr){
+    var agg={};
+    (ordersArr||[]).forEach(function(o){
+      var items=o.items||{};
+      Object.keys(items).forEach(function(id){
+        var q=Number(items[id])||0;
+        if(!q) return;
+        agg[id]=(agg[id]||0)+q;
+      });
+    });
+    return agg;
+  }
+
+  function orderTotal(items){
+    var total=0;
+    Object.keys(items||{}).forEach(function(id){
+      var it=state.items.find(function(x){return x.id===id;});
+      if(it) total += (Number(items[id])||0)*it.price;
+    });
+    return total;
+  }
+
+  function consumptionForOrders(agg){
+    var cons={};
+    state.items.forEach(function(item){
+      var qty = Number(agg[item.id])||0;
+      if(!qty) return;
+      item.ingredients.forEach(function(ing){
+        var num = Number(ing.qty);
+        if(isNaN(num)) return;
+        var key = ing.name+'|'+ing.unit;
+        cons[key] = (cons[key]||0) + num*qty;
+      });
+    });
+    return cons;
+  }
+
+  function revenueForOrders(agg){
+    var total=0;
+    state.items.forEach(function(item){
+      var qty = Number(agg[item.id])||0;
+      total += qty*item.price;
+    });
+    return total;
+  }
+
+  function findManualOrder(ordersArr){
+    return ordersArr.find(function(o){return o.id==='manual';});
+  }
+
+  function setManualQty(ordersArr, item, value){
+    var qty = Number(value)||0;
+    var manual = findManualOrder(ordersArr);
+    if(qty<=0){
+      if(manual){
+        delete manual.items[item.id];
+        if(Object.keys(manual.items).length===0){
+          ordersArr.splice(ordersArr.indexOf(manual),1);
+        }
+      }
+      return;
+    }
+    if(!manual){
+      manual={id:'manual', at:new Date().toISOString(), staffId:null, staffName:'إدخال يدوي', items:{}};
+      ordersArr.push(manual);
+    }
+    manual.items[item.id]=qty;
+  }
+
+  function renderProductionView(container){
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='الأوردرات اللي بتتسجل من الكاشير بتظهر هنا لوحدها أول بأول. لو محتاج تصحح أو تضيف بيع يدوي (يوم مفيش كاشير مثلاً) استخدم عمود "يدوي".';
+    container.appendChild(note);
+
+    var toolbar=document.createElement('div'); toolbar.className='toolbar';
+    var df=document.createElement('div'); df.className='date-field'; df.innerHTML='<label>اليوم</label>';
+    var dateInput=document.createElement('input'); dateInput.type='date'; dateInput.value=prodDate;
+    dateInput.onchange=function(){ prodDate=dateInput.value; render(); };
+    df.appendChild(dateInput);
+    toolbar.appendChild(df);
+    container.appendChild(toolbar);
+
+    var ordersArr = ensureOrdersForDate(prodDate);
+    var ordersCountEl, revenueEl, consTable, logBox;
+
+    function recomputeSummary(){
+      var agg = aggregateOrderItems(ordersArr);
+      var totalOrders=0;
+      Object.keys(agg).forEach(function(id){ totalOrders += agg[id]; });
+      ordersCountEl.textContent = 'إجمالي الأوردرات: '+totalOrders;
+      revenueEl.textContent = 'الإيراد المتوقع: '+money(revenueForOrders(agg))+' ج.م';
+
+      var cons = consumptionForOrders(agg);
+      var keys = Object.keys(cons).sort(function(a,b){return a.localeCompare(b,'ar');});
+      if(keys.length===0){
+        consTable.innerHTML = '<tr><td class="empty">لسه مفيش أوردرات متسجلة النهاردة</td></tr>';
+      } else {
+        var rows = '<tr><th>الخامة</th><th>الكمية المتوقع استهلاكها</th></tr>';
+        keys.forEach(function(k){
+          var parts = k.split('|'); var name=parts[0], unit=parts[1];
+          rows += '<tr><td><b>'+esc(name)+'</b></td><td>'+money(cons[k])+' '+esc(unit)+'</td></tr>';
+        });
+        consTable.innerHTML = rows;
+      }
+
+      var realOrders = ordersArr.filter(function(o){return o.id!=='manual';}).slice().sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
+      logBox.innerHTML='';
+      if(realOrders.length===0){
+        var emptyEl=document.createElement('div'); emptyEl.className='empty'; emptyEl.textContent='لسه مفيش أوردرات مسجّلة من الكاشير في اليوم ده';
+        logBox.appendChild(emptyEl);
+      } else {
+        realOrders.forEach(function(o){
+          var t = o.at ? new Date(o.at).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) : '';
+          var lines = Object.keys(o.items||{}).map(function(id){
+            var it=state.items.find(function(x){return x.id===id;});
+            return (it?it.name:id)+' × '+o.items[id];
+          }).join('، ');
+          var row=document.createElement('div'); row.className='order-log-row';
+          var top=document.createElement('div'); top.className='olr-top';
+          var left=document.createElement('span'); left.innerHTML='<b>'+esc(o.staffName||'')+'</b> · '+esc(t);
+          var right=document.createElement('span'); right.style.cssText='display:flex;align-items:center;gap:8px;';
+          var totalB=document.createElement('b'); totalB.textContent=money(orderTotal(o.items))+' ج.م';
+          var delBtn=document.createElement('button'); delBtn.className='icon-btn'; delBtn.title='حذف الأوردر ده من مبيعات اليوم'; delBtn.textContent='✕';
+          delBtn.onclick=function(){
+            if(!confirm('تحذف الأوردر ده من مبيعات اليوم؟ (استخدمها لو الزبون غيّر طلبه — مش لو الأكل هلك، ده تسجّله في الهدر بدل كده)')) return;
+            ordersArr.splice(ordersArr.indexOf(o),1);
+            persist(); render();
+          };
+          right.appendChild(totalB); right.appendChild(delBtn);
+          top.appendChild(left); top.appendChild(right);
+          var itemsDiv=document.createElement('div'); itemsDiv.className='olr-items'; itemsDiv.textContent=lines;
+          row.appendChild(top); row.appendChild(itemsDiv);
+          logBox.appendChild(row);
+        });
+      }
+    }
+
+    state.categories.forEach(function(cat){
+      var catTitle=document.createElement('h3'); catTitle.className='section-title'; catTitle.textContent=(CAT_ICON[cat.id]||'')+' '+cat.label;
+      container.appendChild(catTitle);
+      var scroll=document.createElement('div'); scroll.className='table-scroll';
+      var table=document.createElement('table'); table.className='grid-table';
+      var thead=document.createElement('tr'); thead.innerHTML='<th>الصنف</th><th>السعر</th><th>من الكاشير</th><th>يدوي</th><th>الإجمالي</th>'; table.appendChild(thead);
+      itemsFor(cat.id).forEach(function(item){
+        var tr=document.createElement('tr');
+        var tdName=document.createElement('td'); tdName.className='name-cell'; tdName.textContent=item.name;
+        var tdPrice=document.createElement('td'); tdPrice.className='used-in'; tdPrice.textContent=money(item.price)+' ج.م';
+        var tdCashier=document.createElement('td'); tdCashier.className='used-in';
+        var tdManual=document.createElement('td');
+        var tdTotal=document.createElement('td'); tdTotal.style.fontWeight='700';
+        function refreshRow(){
+          var cashierQty = ordersArr.filter(function(o){return o.id!=='manual';}).reduce(function(sum,o){return sum+(Number((o.items||{})[item.id])||0);},0);
+          var manual = findManualOrder(ordersArr);
+          var manualQty = manual ? (Number(manual.items[item.id])||0) : 0;
+          tdCashier.textContent = cashierQty || '—';
+          tdTotal.textContent = (cashierQty+manualQty) || '—';
+        }
+        var inp=document.createElement('input'); inp.type='number'; inp.step='1'; inp.min='0';
+        var manualInit = findManualOrder(ordersArr);
+        inp.value = (manualInit && manualInit.items[item.id]) || '';
+        inp.oninput=function(){ setManualQty(ordersArr, item, inp.value); refreshRow(); recomputeSummary(); };
+        tdManual.appendChild(inp);
+        refreshRow();
+        tr.appendChild(tdName); tr.appendChild(tdPrice); tr.appendChild(tdCashier); tr.appendChild(tdManual); tr.appendChild(tdTotal);
+        table.appendChild(tr);
+      });
+      scroll.appendChild(table); container.appendChild(scroll);
+    });
+
+    var summaryBox=document.createElement('div');
+    summaryBox.style.cssText='margin-top:6px;margin-bottom:16px;padding:14px 18px;background:var(--accent-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;';
+    ordersCountEl=document.createElement('span'); ordersCountEl.style.fontWeight='700';
+    revenueEl=document.createElement('span'); revenueEl.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:18px;color:var(--accent);';
+    summaryBox.appendChild(ordersCountEl); summaryBox.appendChild(revenueEl);
+    container.appendChild(summaryBox);
+
+    var logTitle=document.createElement('h3'); logTitle.className='section-title'; logTitle.textContent='سجل الأوردرات (من الكاشير)';
+    container.appendChild(logTitle);
+    logBox=document.createElement('div');
+    container.appendChild(logBox);
+
+    var consTitle=document.createElement('h3'); consTitle.className='section-title'; consTitle.textContent='استهلاك الخامات المتوقع في اليوم ده';
+    container.appendChild(consTitle);
+    var consScroll=document.createElement('div'); consScroll.className='table-scroll';
+    consTable=document.createElement('table'); consTable.className='ing-master';
+    consScroll.appendChild(consTable);
+    container.appendChild(consScroll);
+
+    recomputeSummary();
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px';
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ مبيعات يوم '+prodDate;
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(saveBtn);
+    container.appendChild(actions);
+  }
+
+  function renderMaterialsList(container){
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='سعر الوحدة بيتحسب بيه تكلفة الخامات في التقارير — سجّله لكل خامة عشان تطلع أرباحك دقيقة.';
+    container.appendChild(note);
+
+    var scroll=document.createElement('div'); scroll.className='table-scroll';
+    var table=document.createElement('table'); table.className='ing-master';
+    var thead=document.createElement('tr'); thead.innerHTML='<th>الخامة</th><th>الوحدة</th><th>سعر الوحدة (ج.م)</th><th>مسجّل بيعه يوميًا؟</th><th></th>';
+    table.appendChild(thead);
+    state.materials.forEach(function(m,idx){
+      var tr=document.createElement('tr');
+      var tdName=document.createElement('td'); tdName.innerHTML='<b>'+esc(m.name)+'</b>';
+      var tdUnit=document.createElement('td'); tdUnit.textContent=m.unit;
+      var tdPrice=document.createElement('td');
+      var priceInp=document.createElement('input'); priceInp.type='number'; priceInp.step='any'; priceInp.style.minWidth='90px';
+      priceInp.value = m.price===undefined? '' : m.price;
+      priceInp.oninput=function(){ m.price=priceInp.value; };
+      tdPrice.appendChild(priceInp);
+      var tdTrack=document.createElement('td'); tdTrack.textContent=m.trackProduction?'أيوه':'لأ';
+      var tdDel=document.createElement('td');
+      var del=document.createElement('button'); del.className='icon-btn'; del.textContent='🗑';
+      del.onclick=function(){ if(confirm('تحذف "'+m.name+'" من قائمة الخامات؟')){ state.materials.splice(idx,1); persist(); render(); } };
+      tdDel.appendChild(del);
+      tr.appendChild(tdName); tr.appendChild(tdUnit); tr.appendChild(tdPrice); tr.appendChild(tdTrack); tr.appendChild(tdDel);
+      table.appendChild(tr);
+    });
+    scroll.appendChild(table); container.appendChild(scroll);
+
+    var addRow=document.createElement('div'); addRow.className='ing-edit-row'; addRow.style.marginTop='14px';
+    var nField=document.createElement('div'); nField.className='field'; nField.innerHTML='<label>اسم الخامة الجديدة</label>';
+    var nInput=document.createElement('input'); nField.appendChild(nInput);
+    var uField=document.createElement('div'); uField.className='field small'; uField.innerHTML='<label>الوحدة</label>';
+    var uSelect=document.createElement('select');
+    ['كجم','جم','لتر','مل','عدد','رول'].forEach(function(u){ var o=document.createElement('option'); o.value=u; o.textContent=u; uSelect.appendChild(o); });
+    uField.appendChild(uSelect);
+    var pField=document.createElement('div'); pField.className='field small'; pField.innerHTML='<label>سعر الوحدة</label>';
+    var pInput=document.createElement('input'); pInput.type='number'; pInput.step='any'; pField.appendChild(pInput);
+    var addBtn=document.createElement('button'); addBtn.className='btn primary'; addBtn.textContent='+ أضف خامة';
+    addBtn.onclick=function(){
+      if(!nInput.value.trim()) return;
+      state.materials.push({id:uid('mat'), name:nInput.value.trim(), unit:uSelect.value, price:pInput.value||'', trackProduction:false});
+      persist(); render();
+    };
+    addRow.appendChild(nField); addRow.appendChild(uField); addRow.appendChild(pField); addRow.appendChild(addBtn);
+    container.appendChild(addRow);
+
+    var saveActions=document.createElement('div'); saveActions.className='actions-end'; saveActions.style.marginTop='14px';
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ الأسعار';
+    saveBtn.onclick=function(){ persist(); };
+    saveActions.appendChild(saveBtn);
+    container.appendChild(saveActions);
+  }
+
+  function renderInventoryModule(container){
+    document.getElementById('pageTitle').textContent='المخزون والموردين';
+    document.getElementById('pageSub').textContent='حركة الخامات اليومية، مبيعات الأصناف، قائمة الخامات، والموردين';
+    document.getElementById('pageHint').innerHTML='الأرقام دي بتتحفظ لكل اللي بيفتحوا الصفحة دي، وممكن ترجع لأي يوم فات من مربع التاريخ وتعدّل فيه.';
+    document.getElementById('statsRow').innerHTML = renderInvStats();
+
+    renderInvSubtabs(container);
+    if(invSubtab==='stock') renderStockView(container);
+    else if(invSubtab==='production') renderProductionView(container);
+    else if(invSubtab==='suppliers') renderSuppliersView(container);
+    else if(invSubtab==='supplierAccounts') renderSupplierAccountsView(container);
+    else renderMaterialsList(container);
+  }
+
+  /* ================= STAFF MODULE ================= */
+  function formatTime12(t){
+    if(!t) return '';
+    var parts=t.split(':'); var h=parseInt(parts[0],10); var m=parts[1];
+    var period = h<12 ? 'ص' : 'م';
+    var h12 = h%12; if(h12===0) h12=12;
+    return h12+':'+m+' '+period;
+  }
+
+  function staffAllTimeBalance(staffId){
+    var staff = state.staff.find(function(s){return s.id===staffId;});
+    if(!staff) return 0;
+    var total=0;
+    Object.keys(state.staffLogs).forEach(function(d){
+      var log = state.staffLogs[d][staffId];
+      if(!log) return;
+      var earned = (Number(log.hours)||0)*staff.hourlyRate;
+      var paid = log.paid===undefined||log.paid==='' ? earned : (Number(log.paid)||0);
+      total += earned - paid;
+    });
+    return total;
+  }
+
+  function computeStaffStats(){
+    var daysLogged = Object.keys(state.staffLogs||{}).length;
+    var dailyWageTotal = state.staff.reduce(function(sum,s){ return sum + (s.defaultHours * s.hourlyRate); },0);
+    var totalOwed = state.staff.reduce(function(sum,s){ return sum + staffAllTimeBalance(s.id); },0);
+    return {staffCount: state.staff.length, daysLogged: daysLogged, dailyWageTotal: dailyWageTotal, totalOwed: totalOwed};
+  }
+
+  function renderStaffStats(){
+    var s = computeStaffStats();
+    return '<div class="stat"><div class="num">'+s.staffCount+'</div><div class="lbl">عدد العمال</div></div>'+
+      '<div class="stat accent"><div class="num">'+money(s.dailyWageTotal)+'</div><div class="lbl">إجمالي الأجور المتوقع في اليوم (ج.م)</div></div>'+
+      '<div class="stat'+(s.totalOwed>0?' warn':'')+'"><div class="num">'+money(s.totalOwed)+'</div><div class="lbl">إجمالي المستحق للعمال دلوقتي (لسه ماتصرفش)</div></div>';
+  }
+
+  function renderStaffSubtabs(container){
+    var nav=document.createElement('div'); nav.className='subtabs';
+    var t1=document.createElement('button'); t1.textContent='الحضور اليومي'; t1.className=staffSubtab==='attendance'?'active':'';
+    t1.onclick=function(){ staffSubtab='attendance'; render(); };
+    var t2=document.createElement('button'); t2.textContent='بيانات العمال'; t2.className=staffSubtab==='roster'?'active':'';
+    t2.onclick=function(){ staffSubtab='roster'; render(); };
+    nav.appendChild(t1); nav.appendChild(t2);
+    container.appendChild(nav);
+  }
+
+  function renderAttendanceView(container){
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='المطعم بيفتح من <b>4 العصر لحد 3 الصبح</b>. عدد الساعات الأساسي 8 ساعات لكل عامل، وتقدر تزوّد أو تقلّل حسب اليوم. لو العامل ياخد جزء من يومه بس، سجّل <b>المدفوع فعليًا</b> والباقي هيتجمع كرصيد لحد ما تقفله.';
+    container.appendChild(note);
+
+    var toolbar=document.createElement('div'); toolbar.className='toolbar';
+    var df=document.createElement('div'); df.className='date-field'; df.innerHTML='<label>اليوم</label>';
+    var dateInput=document.createElement('input'); dateInput.type='date'; dateInput.value=staffDate;
+    dateInput.onchange=function(){ staffDate=dateInput.value; render(); };
+    df.appendChild(dateInput);
+    toolbar.appendChild(df);
+    container.appendChild(toolbar);
+
+    var keyList = state.staff.map(function(s){return s.id;});
+    var dayLog = ensureDayLog(state.staffLogs, staffDate, keyList, ['hours','paid','notes']);
+    state.staff.forEach(function(s){
+      if(dayLog[s.id].hours===''){ dayLog[s.id].hours=s.defaultHours; }
+      if(dayLog[s.id].paid===''){ dayLog[s.id].paid=dayLog[s.id].hours*s.hourlyRate; }
+    });
+
+    var scroll=document.createElement('div'); scroll.className='table-scroll';
+    var table=document.createElement('table'); table.className='grid-table';
+    var thead=document.createElement('tr');
+    thead.innerHTML='<th>العامل</th><th>نوبته المعتادة</th><th>ساعات اليوم</th><th>المستحق (ج.م)</th><th>المدفوع فعليًا (ج.م)</th><th>الرصيد المتراكم</th><th>ملاحظات</th>';
+    table.appendChild(thead);
+
+    var dayTotal=0;
+    state.staff.forEach(function(s){
+      var tr=document.createElement('tr');
+      var tdName=document.createElement('td'); tdName.className='name-cell'; tdName.textContent=s.name;
+      tr.appendChild(tdName);
+
+      var tdShift=document.createElement('td'); tdShift.className='used-in';
+      tdShift.textContent = formatTime12(s.shiftStart)+' — '+formatTime12(s.shiftEnd);
+      tr.appendChild(tdShift);
+
+      var wageCell, balCell;
+      var tdHours=document.createElement('td');
+      var hInp=document.createElement('input'); hInp.type='number'; hInp.step='0.5'; hInp.value=dayLog[s.id].hours;
+      hInp.oninput=function(){
+        dayLog[s.id].hours=hInp.value;
+        wageCell.textContent=money((Number(hInp.value)||0)*s.hourlyRate);
+        balCell.textContent=money(staffAllTimeBalance(s.id));
+        recomputeTotal();
+      };
+      tdHours.appendChild(hInp); tr.appendChild(tdHours);
+
+      var tdWage=document.createElement('td');
+      wageCell=document.createElement('span'); wageCell.style.fontWeight='700';
+      wageCell.textContent = money((Number(dayLog[s.id].hours)||0)*s.hourlyRate);
+      tdWage.appendChild(wageCell); tr.appendChild(tdWage);
+      dayTotal += (Number(dayLog[s.id].hours)||0)*s.hourlyRate;
+
+      var tdPaid=document.createElement('td');
+      var pInp=document.createElement('input'); pInp.type='number'; pInp.step='any'; pInp.value=dayLog[s.id].paid;
+      pInp.oninput=function(){ dayLog[s.id].paid=pInp.value; balCell.textContent=money(staffAllTimeBalance(s.id)); recomputeTotal(); };
+      tdPaid.appendChild(pInp); tr.appendChild(tdPaid);
+
+      var tdBal=document.createElement('td');
+      balCell=document.createElement('span'); balCell.style.fontWeight='700';
+      var bal0=staffAllTimeBalance(s.id);
+      if(bal0>0) balCell.style.color='var(--warn)';
+      balCell.textContent=money(bal0);
+      tdBal.appendChild(balCell); tr.appendChild(tdBal);
+
+      var tdNotes=document.createElement('td');
+      var notesInp=document.createElement('input'); notesInp.type='text'; notesInp.style.minWidth='130px'; notesInp.value=dayLog[s.id].notes;
+      notesInp.oninput=function(){ dayLog[s.id].notes=notesInp.value; };
+      tdNotes.appendChild(notesInp); tr.appendChild(tdNotes);
+
+      table.appendChild(tr);
+    });
+
+    var totalRow=document.createElement('tr');
+    totalRow.innerHTML='<td style="font-weight:700;">الإجمالي</td><td></td><td></td>'+
+      '<td id="staffDayTotal" style="font-weight:800;color:var(--accent);"></td>'+
+      '<td id="staffDayPaidTotal" style="font-weight:800;"></td>'+
+      '<td id="staffDayBalTotal" style="font-weight:800;"></td><td></td>';
+    table.appendChild(totalRow);
+
+    function recomputeTotal(){
+      var t=0, p=0, b=0;
+      state.staff.forEach(function(s){
+        t += (Number(dayLog[s.id].hours)||0)*s.hourlyRate;
+        p += Number(dayLog[s.id].paid)||0;
+        b += staffAllTimeBalance(s.id);
+      });
+      document.getElementById('staffDayTotal').textContent = money(t);
+      document.getElementById('staffDayPaidTotal').textContent = money(p);
+      var balTotalEl = document.getElementById('staffDayBalTotal');
+      balTotalEl.textContent = money(b);
+      balTotalEl.style.color = b>0 ? 'var(--warn)' : 'var(--ink)';
+    }
+
+    scroll.appendChild(table); container.appendChild(scroll);
+    recomputeTotal();
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px';
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ حضور يوم '+staffDate;
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(saveBtn);
+    container.appendChild(actions);
+  }
+
+  function renderRosterView(container){
+    var pinNote=document.createElement('div'); pinNote.className='cat-note info';
+    pinNote.innerHTML='الرقم السري (PIN) بيستخدمه العامل عشان يسجّل دخول على "وضع الكاشير" على موبايل مخصص لكده — كل عامل بالرقم بتاعه، عشان تعرف مين كان مسؤول الوردية.';
+    container.appendChild(pinNote);
+
+    var scroll=document.createElement('div'); scroll.className='table-scroll';
+    var table=document.createElement('table'); table.className='grid-table';
+    var thead=document.createElement('tr');
+    thead.innerHTML='<th>الاسم</th><th>الأجر بالساعة (ج.م)</th><th>بداية النوبة</th><th>نهاية النوبة</th><th>ساعات اليوم الأساسية</th><th>الرقم السري (PIN)</th><th></th>';
+    table.appendChild(thead);
+
+    state.staff.forEach(function(s, idx){
+      var tr=document.createElement('tr');
+
+      var tdName=document.createElement('td');
+      var nameInp=document.createElement('input'); nameInp.value=s.name; nameInp.style.minWidth='110px';
+      nameInp.oninput=function(){ s.name=nameInp.value; };
+      tdName.appendChild(nameInp); tr.appendChild(tdName);
+
+      var tdRate=document.createElement('td');
+      var rateInp=document.createElement('input'); rateInp.type='number'; rateInp.value=s.hourlyRate;
+      rateInp.oninput=function(){ s.hourlyRate=Number(rateInp.value)||0; };
+      tdRate.appendChild(rateInp); tr.appendChild(tdRate);
+
+      var tdStart=document.createElement('td');
+      var startInp=document.createElement('input'); startInp.type='time'; startInp.value=s.shiftStart;
+      startInp.onchange=function(){ s.shiftStart=startInp.value; };
+      tdStart.appendChild(startInp); tr.appendChild(tdStart);
+
+      var tdEnd=document.createElement('td');
+      var endInp=document.createElement('input'); endInp.type='time'; endInp.value=s.shiftEnd;
+      endInp.onchange=function(){ s.shiftEnd=endInp.value; };
+      tdEnd.appendChild(endInp); tr.appendChild(tdEnd);
+
+      var tdHours=document.createElement('td');
+      var hoursInp=document.createElement('input'); hoursInp.type='number'; hoursInp.step='0.5'; hoursInp.value=s.defaultHours;
+      hoursInp.oninput=function(){ s.defaultHours=Number(hoursInp.value)||0; };
+      tdHours.appendChild(hoursInp); tr.appendChild(tdHours);
+
+      var tdPin=document.createElement('td');
+      var pinInp=document.createElement('input'); pinInp.type='text'; pinInp.inputMode='numeric'; pinInp.style.minWidth='70px'; pinInp.placeholder='مثال: 1111';
+      pinInp.value=s.pin||'';
+      pinInp.oninput=function(){ s.pin=pinInp.value; };
+      tdPin.appendChild(pinInp); tr.appendChild(tdPin);
+
+      var tdDel=document.createElement('td');
+      var del=document.createElement('button'); del.className='icon-btn'; del.textContent='🗑';
+      del.onclick=function(){ if(confirm('تحذف "'+s.name+'"؟')){ state.staff.splice(idx,1); persist(); render(); } };
+      tdDel.appendChild(del); tr.appendChild(tdDel);
+
+      table.appendChild(tr);
+    });
+    scroll.appendChild(table); container.appendChild(scroll);
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px'; actions.style.gap='10px';
+    var addBtn=document.createElement('button'); addBtn.className='btn ghost'; addBtn.textContent='+ إضافة عامل';
+    addBtn.onclick=function(){ state.staff.push({id:uid('st'), name:'عامل جديد', hourlyRate:40, shiftStart:'16:00', shiftEnd:'00:00', defaultHours:8, pin:''}); render(); };
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ بيانات العمال';
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(addBtn); actions.appendChild(saveBtn);
+    container.appendChild(actions);
+
+    var cashierCard=document.createElement('div'); cashierCard.className='card'; cashierCard.style.marginTop='20px';
+    var cashierTitle=document.createElement('h3'); cashierTitle.style.cssText='margin:0 0 10px;font-size:14.5px;'; cashierTitle.textContent='🔒 وضع الكاشير';
+    cashierCard.appendChild(cashierTitle);
+    var cashierDesc=document.createElement('p'); cashierDesc.style.cssText='margin:0 0 12px;font-size:13px;color:var(--ink-dim);line-height:1.6;';
+    cashierDesc.textContent='ابعت رابط الكاشير بتاع تحت للموظف يفتحه على موبايله — هيفتحله على طول شاشة تسجيل الدخول بالاسم والـPIN، وبعدها شاشة طلب سريع + مصروف سريع + الصافي المتوقع بس، من غير أي وصول لباقي أقسام النظام، وهيفضل كده كل مرة يفتح فيها نفس الرابط.';
+    cashierCard.appendChild(cashierDesc);
+
+    var linkField=document.createElement('div'); linkField.className='field';
+    linkField.innerHTML='<label>رابط الكاشير (ابعته للموظف)</label>';
+    var linkInput=document.createElement('input'); linkInput.type='text'; linkInput.readOnly=true;
+    linkInput.value = location.href.split('#')[0] + '#cashier';
+    linkField.appendChild(linkInput);
+    cashierCard.appendChild(linkField);
+
+    var pinRow=document.createElement('div'); pinRow.className='field-row'; pinRow.style.marginTop='10px';
+    var opField=document.createElement('div'); opField.className='field small'; opField.innerHTML='<label>الرقم السري للمالك (للخروج من وضع الكاشير)</label>';
+    var opInput=document.createElement('input'); opInput.type='text'; opInput.inputMode='numeric'; opInput.value=state.ownerPin||'';
+    opInput.oninput=function(){ state.ownerPin=opInput.value; };
+    opField.appendChild(opInput);
+    pinRow.appendChild(opField);
+    cashierCard.appendChild(pinRow);
+
+    var cashierActions=document.createElement('div'); cashierActions.className='actions-end'; cashierActions.style.marginTop='10px'; cashierActions.style.gap='10px';
+    var saveOpBtn=document.createElement('button'); saveOpBtn.className='btn ghost'; saveOpBtn.textContent='حفظ الرقم السري';
+    saveOpBtn.onclick=function(){ persist(); };
+    var copyBtn=document.createElement('button'); copyBtn.className='btn ghost'; copyBtn.textContent='نسخ الرابط';
+    copyBtn.onclick=function(){
+      var hasPins = state.staff.some(function(s){return s.pin;});
+      if(!hasPins){ alert('محتاج تحفظ PIN لعامل واحد على الأقل الأول.'); return; }
+      linkInput.select();
+      try{ document.execCommand('copy'); copyBtn.textContent='اتنسخ ✓'; setTimeout(function(){copyBtn.textContent='نسخ الرابط';},1500); }
+      catch(e){ alert('انسخه يدوي من الصندوق فوق.'); }
+    };
+    var activateBtn=document.createElement('button'); activateBtn.className='btn primary'; activateBtn.textContent='فعّل هنا على الجهاز ده دلوقتي';
+    activateBtn.onclick=function(){
+      var hasPins = state.staff.some(function(s){return s.pin;});
+      if(!hasPins){ alert('محتاج تحفظ PIN لعامل واحد على الأقل الأول.'); return; }
+      if(!confirm('هيتقفل الجهاز ده على وضع الكاشير بس. متأكد؟')) return;
+      location.hash = 'cashier';
+      location.reload();
+    };
+    cashierActions.appendChild(saveOpBtn); cashierActions.appendChild(copyBtn); cashierActions.appendChild(activateBtn);
+    cashierCard.appendChild(cashierActions);
+    container.appendChild(cashierCard);
+  }
+
+  function renderStaffModule(container){
+    document.getElementById('pageTitle').textContent='العمال';
+    document.getElementById('pageSub').textContent='الحضور والأجور اليومية، وبيانات كل عامل';
+    document.getElementById('pageHint').innerHTML='الأرقام دي بتتحفظ لكل اللي بيفتحوا الصفحة دي.';
+    document.getElementById('statsRow').innerHTML = renderStaffStats();
+
+    renderStaffSubtabs(container);
+    if(staffSubtab==='attendance') renderAttendanceView(container);
+    else renderRosterView(container);
+  }
+
+  /* ================= DAILY CLOSING (POS) MODULE ================= */
+  function ensureClosing(date){
+    if(!state.dailyClosings[date]){ state.dailyClosings[date]={sales:'', expenses:[], notes:''}; }
+    return state.dailyClosings[date];
+  }
+  function expensesTotal(closing){
+    return closing.expenses.reduce(function(sum,e){ return sum + (Number(e.amount)||0); },0);
+  }
+
+  function computePosStats(){
+    var dates = Object.keys(state.dailyClosings||{});
+    var lastNet = null;
+    if(dates.length){
+      var lastDate = dates.sort().slice(-1)[0];
+      var c = state.dailyClosings[lastDate];
+      lastNet = (Number(c.sales)||0) - expensesTotal(c);
+    }
+    return {daysCount: dates.length, lastNet: lastNet};
+  }
+
+  function renderPosStats(){
+    var s = computePosStats();
+    return '<div class="stat"><div class="num">'+s.daysCount+'</div><div class="lbl">يوم متسجل إقفاله</div></div>'+
+      '<div class="stat accent"><div class="num">'+(s.lastNet===null?'—':money(s.lastNet))+'</div><div class="lbl">صافي إيراد آخر يوم متسجل</div></div>'+
+      '<div class="stat"><div class="num">'+state.staff.length+'</div><div class="lbl">عمال بيسجلوا لك الأرقام</div></div>';
+  }
+
+  function renderFixedCosts(container){
+    var wrap=document.createElement('div'); wrap.className='card'; wrap.style.marginBottom='16px';
+    var title=document.createElement('h3'); title.style.cssText='margin:0 0 10px;font-size:14.5px;'; title.textContent='مصاريف ثابتة (شهرية)';
+    wrap.appendChild(title);
+
+    var list=document.createElement('div'); list.className='ing-list-edit';
+    state.fixedCosts.forEach(function(fc, idx){
+      var row=document.createElement('div'); row.className='ing-edit-row';
+      var nField=document.createElement('div'); nField.className='field'; nField.innerHTML='<label>البند</label>';
+      var nInp=document.createElement('input'); nInp.value=fc.name; nInp.oninput=function(){ fc.name=nInp.value; };
+      nField.appendChild(nInp);
+      var aField=document.createElement('div'); aField.className='field small'; aField.innerHTML='<label>المبلغ الشهري (ج.م)</label>';
+      var aInp=document.createElement('input'); aInp.type='number'; aInp.value=fc.amount; aInp.oninput=function(){ fc.amount=Number(aInp.value)||0; };
+      aField.appendChild(aInp);
+      var rm=document.createElement('button'); rm.className='icon-btn'; rm.textContent='✕';
+      rm.onclick=function(){ state.fixedCosts.splice(idx,1); persist(); render(); };
+      row.appendChild(nField); row.appendChild(aField); row.appendChild(rm);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+
+    var addBtn=document.createElement('button'); addBtn.className='btn ghost'; addBtn.style.marginTop='10px';
+    addBtn.textContent='+ إضافة مصروف ثابت';
+    addBtn.onclick=function(){ state.fixedCosts.push({id:uid('fc'), name:'', amount:0}); persist(); render(); };
+    wrap.appendChild(addBtn);
+    container.appendChild(wrap);
+  }
+
+  function renderPosModule(container){
+    document.getElementById('pageTitle').textContent='الإقفال اليومي';
+    document.getElementById('pageSub').textContent='من غير كاشير إلكتروني — بتقفل يومك بالأرقام اللي جايالك من كابتن الأوردر والجرد';
+    document.getElementById('pageHint').innerHTML='الأرقام دي بتتحفظ لكل اللي بيفتحوا الصفحة دي.';
+    document.getElementById('statsRow').innerHTML = renderPosStats();
+
+    var note=document.createElement('div'); note.className='cat-note info';
+    note.innerHTML='مفيش كاشير إلكتروني — الشيف ماسك كابتن أوردر، وفي آخر اليوم بتسجل هنا <b>إجمالي المبيعات</b> و<b>المصاريف</b> عشان يطلعلك <b>صافي الإيراد</b> تلقائي. اعمل ورقة للعامل يسجل عليها الأرقام (مبيعات، مصاريف، حركة الأصناف، الجرد) وبعدين وزّعها هنا في السيستم.';
+    container.appendChild(note);
+
+    renderFixedCosts(container);
+
+    var toolbar=document.createElement('div'); toolbar.className='toolbar';
+    var df=document.createElement('div'); df.className='date-field'; df.innerHTML='<label>اليوم</label>';
+    var dateInput=document.createElement('input'); dateInput.type='date'; dateInput.value=posDate;
+    dateInput.onchange=function(){ posDate=dateInput.value; render(); };
+    df.appendChild(dateInput); toolbar.appendChild(df);
+    container.appendChild(toolbar);
+
+    var closing = ensureClosing(posDate);
+
+    var card=document.createElement('div'); card.className='card';
+
+    var row1=document.createElement('div'); row1.className='field-row';
+    var salesField=document.createElement('div'); salesField.className='field';
+    salesField.innerHTML='<label>إجمالي المبيعات (ج.م)</label>';
+    var salesInp=document.createElement('input'); salesInp.type='number'; salesInp.step='any'; salesInp.value=closing.sales;
+    var netVal;
+    salesInp.oninput=function(){ closing.sales=salesInp.value; recomputeNet(); };
+    salesField.appendChild(salesInp);
+    row1.appendChild(salesField);
+    card.appendChild(row1);
+
+    var expLabel=document.createElement('label'); expLabel.textContent='المصاريف'; expLabel.style.fontSize='11.5px'; expLabel.style.color='var(--ink-dim)'; expLabel.style.fontWeight='700'; expLabel.style.display='block'; expLabel.style.margin='14px 0 8px';
+    card.appendChild(expLabel);
+
+    var expList=document.createElement('div'); expList.className='ing-list-edit';
+    if(closing.expenses.length===0){
+      var e=document.createElement('div'); e.className='used-in'; e.textContent='لسه مفيش مصاريف مسجّلة النهاردة';
+      expList.appendChild(e);
+    }
+    closing.expenses.forEach(function(exp, idx){
+      var row=document.createElement('div'); row.className='ing-edit-row';
+      var dField=document.createElement('div'); dField.className='field'; dField.innerHTML='<label>البيان</label>';
+      var dInp=document.createElement('input'); dInp.value=exp.desc; dInp.placeholder='مثال: خضار';
+      dInp.oninput=function(){ exp.desc=dInp.value; };
+      dField.appendChild(dInp);
+      var aField=document.createElement('div'); aField.className='field small'; aField.innerHTML='<label>المبلغ</label>';
+      var aInp=document.createElement('input'); aInp.type='number'; aInp.step='any'; aInp.value=exp.amount;
+      aInp.oninput=function(){ exp.amount=aInp.value; recomputeNet(); };
+      aField.appendChild(aInp);
+      var rm=document.createElement('button'); rm.className='icon-btn'; rm.textContent='✕'; rm.title='احذف';
+      rm.onclick=function(){ closing.expenses.splice(idx,1); render(); };
+      row.appendChild(dField); row.appendChild(aField); row.appendChild(rm);
+      expList.appendChild(row);
+    });
+    card.appendChild(expList);
+
+    var addExpBtn=document.createElement('button'); addExpBtn.className='btn ghost'; addExpBtn.style.marginTop='10px';
+    addExpBtn.textContent='+ إضافة مصروف';
+    addExpBtn.onclick=function(){ closing.expenses.push({desc:'',amount:''}); render(); };
+    card.appendChild(addExpBtn);
+
+    var notesField=document.createElement('div'); notesField.className='field'; notesField.style.marginTop='14px';
+    notesField.innerHTML='<label>ملاحظات</label>';
+    var notesInp=document.createElement('input'); notesInp.value=closing.notes;
+    notesInp.oninput=function(){ closing.notes=notesInp.value; };
+    notesField.appendChild(notesInp);
+    card.appendChild(notesField);
+
+    var netBox=document.createElement('div');
+    netBox.style.cssText='margin-top:16px;padding:14px 18px;background:var(--accent-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;';
+    var netLabel=document.createElement('span'); netLabel.style.fontWeight='700'; netLabel.textContent='صافي الإيراد';
+    netVal=document.createElement('span'); netVal.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:20px;color:var(--accent);';
+    function recomputeNet(){ netVal.textContent = money((Number(closing.sales)||0) - expensesTotal(closing)) + ' ج.م'; }
+    recomputeNet();
+    netBox.appendChild(netLabel); netBox.appendChild(netVal);
+    card.appendChild(netBox);
+
+    var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px';
+    var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ إقفال يوم '+posDate;
+    saveBtn.onclick=function(){ persist(); };
+    actions.appendChild(saveBtn);
+    card.appendChild(actions);
+
+    container.appendChild(card);
+
+    var histDates = Object.keys(state.dailyClosings).sort().reverse();
+    if(histDates.length){
+      var histTitle=document.createElement('h3'); histTitle.style.cssText='margin:26px 0 10px;font-size:15px;'; histTitle.textContent='آخر الإقفالات';
+      container.appendChild(histTitle);
+      var scroll=document.createElement('div'); scroll.className='table-scroll';
+      var table=document.createElement('table'); table.className='ing-master';
+      var thead=document.createElement('tr'); thead.innerHTML='<th>اليوم</th><th>المبيعات</th><th>المصاريف</th><th>صافي الإيراد</th>';
+      table.appendChild(thead);
+      histDates.slice(0,14).forEach(function(d){
+        var c=state.dailyClosings[d];
+        var net=(Number(c.sales)||0)-expensesTotal(c);
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+d+'</td><td>'+money(c.sales||0)+'</td><td>'+money(expensesTotal(c))+'</td><td style="font-weight:700;">'+money(net)+'</td>';
+        table.appendChild(tr);
+      });
+      scroll.appendChild(table); container.appendChild(scroll);
+    }
+  }
+
+  /* ================= REPORTS MODULE ================= */
+  var reportsTo = toLocalDateStr(new Date());
+  var reportsFrom = toLocalDateStr(new Date(Date.now() - 29*86400000));
+
+  function toLocalDateStr(d){
+    var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+day;
+  }
+  function datesInRange(from, to){
+    var out=[]; var d=new Date(from+'T00:00:00'); var end=new Date(to+'T00:00:00');
+    if(isNaN(d)||isNaN(end)||d>end) return out;
+    while(d<=end){ out.push(toLocalDateStr(d)); d.setDate(d.getDate()+1); }
+    return out;
+  }
+
+  function renderReportsModule(container){
+    document.getElementById('pageTitle').textContent='التقارير والتحليلات';
+    document.getElementById('pageSub').textContent='ملخص الإيراد والمصاريف والمبيعات والأجور وأرصدة الموردين';
+    document.getElementById('pageHint').innerHTML='التقرير بيتحدث لوحده مع كل بيانات بتضيفها في باقي أقسام النظام.';
+
+    var days = datesInRange(reportsFrom, reportsTo);
+    var totalSales=0, totalExpenses=0, daysWithData=0;
+    var dailyNet = [];
+    days.forEach(function(d){
+      var c = state.dailyClosings[d];
+      if(c){
+        var net=(Number(c.sales)||0)-expensesTotal(c);
+        totalSales += Number(c.sales)||0;
+        totalExpenses += expensesTotal(c);
+        dailyNet.push({date:d, net:net});
+        daysWithData++;
+      } else {
+        dailyNet.push({date:d, net:null});
+      }
+    });
+
+    var ordersByItem = {};
+    var consumptionTotal = {};
+    var ordersRevenueTotal = 0;
+    days.forEach(function(d){
+      var log = aggregateOrderItems(state.orders[d]);
+      if(!log) return;
+      state.items.forEach(function(it){
+        var qty = Number(log[it.id])||0;
+        if(!qty) return;
+        ordersByItem[it.id] = (ordersByItem[it.id]||0) + qty;
+      });
+      ordersRevenueTotal += revenueForOrders(log);
+      var cons = consumptionForOrders(log);
+      Object.keys(cons).forEach(function(k){ consumptionTotal[k] = (consumptionTotal[k]||0) + cons[k]; });
+    });
+
+    var staffWagesTotal = 0;
+    days.forEach(function(d){
+      var log = state.staffLogs[d];
+      if(!log) return;
+      state.staff.forEach(function(s){
+        if(log[s.id]) staffWagesTotal += (Number(log[s.id].hours)||0) * s.hourlyRate;
+      });
+    });
+
+    var fixedCostsMonthly = state.fixedCosts.reduce(function(sum,fc){ return sum+(Number(fc.amount)||0); },0);
+    var netProfit = totalSales - totalExpenses - staffWagesTotal;
+
+    var materialsByName = {};
+    state.materials.forEach(function(m){ materialsByName[m.name]=m; });
+    var ingredientCost = 0;
+    Object.keys(consumptionTotal).forEach(function(k){
+      var name = k.split('|')[0];
+      var mat = materialsByName[name];
+      if(mat && mat.price!==undefined && mat.price!==''){ ingredientCost += consumptionTotal[k]*Number(mat.price); }
+    });
+
+    var wasteCost = 0, wasteQtyByMat = {};
+    var actualConsumption = {}, stockDaysCount = 0;
+    days.forEach(function(d){
+      var log = state.stockLogs[d];
+      if(!log) return;
+      stockDaysCount++;
+      state.materials.forEach(function(m){
+        var entry = log[m.id];
+        if(!entry) return;
+        var opening = Number(entry.opening)||0, closing = Number(entry.closing)||0, w = Number(entry.waste)||0;
+        if(w){ wasteQtyByMat[m.id] = (wasteQtyByMat[m.id]||0) + w; if(m.price!==undefined && m.price!=='') wasteCost += w*Number(m.price); }
+        if(entry.opening!=='' && entry.closing!==''){
+          var consumed = opening - closing - w;
+          if(consumed>0) actualConsumption[m.id] = (actualConsumption[m.id]||0) + consumed;
+        }
+      });
+    });
+
+    document.getElementById('statsRow').innerHTML =
+      '<div class="stat"><div class="num">'+money(totalSales)+'</div><div class="lbl">إجمالي المبيعات (الإقفال اليومي)</div></div>'+
+      '<div class="stat warn"><div class="num">'+money(totalExpenses+staffWagesTotal)+'</div><div class="lbl">إجمالي المصاريف + الأجور</div></div>'+
+      '<div class="stat accent"><div class="num">'+money(netProfit)+'</div><div class="lbl">صافي الربح التقريبي (كاش)</div></div>';
+
+    var toolbar=document.createElement('div'); toolbar.className='toolbar';
+    var fromField=document.createElement('div'); fromField.className='date-field'; fromField.innerHTML='<label>من</label>';
+    var fromInp=document.createElement('input'); fromInp.type='date'; fromInp.value=reportsFrom;
+    fromInp.onchange=function(){ reportsFrom=fromInp.value; render(); };
+    fromField.appendChild(fromInp);
+    var toField=document.createElement('div'); toField.className='date-field'; toField.innerHTML='<label>إلى</label>';
+    var toInp=document.createElement('input'); toInp.type='date'; toInp.value=reportsTo;
+    toInp.onchange=function(){ reportsTo=toInp.value; render(); };
+    toField.appendChild(toInp);
+    toolbar.appendChild(fromField); toolbar.appendChild(toField);
+    container.appendChild(toolbar);
+
+    if(daysWithData===0){
+      var note=document.createElement('div'); note.className='cat-note info';
+      note.innerHTML='لسه مفيش أيام متسجل فيها إقفال يومي في الفترة دي. سجل من "الإقفال اليومي" وهيظهر هنا تلقائي.';
+      container.appendChild(note);
+    }
+
+    var chartCard=document.createElement('div'); chartCard.className='chart-card';
+    var chartTitle=document.createElement('h3'); chartTitle.textContent='صافي الإيراد اليومي';
+    chartCard.appendChild(chartTitle);
+    var maxAbs = Math.max(1, ...dailyNet.map(function(x){ return Math.abs(x.net||0); }));
+    var chart=document.createElement('div'); chart.className='bar-chart';
+    dailyNet.forEach(function(x){
+      var col=document.createElement('div'); col.className='bar-col';
+      var bar=document.createElement('div'); bar.className='bar'+((x.net||0)<0?' neg':'');
+      var h = x.net===null ? 2 : Math.max(2, Math.round((Math.abs(x.net)/maxAbs)*120));
+      bar.style.height = h+'px';
+      bar.title = x.date + (x.net===null ? ' — مفيش بيانات' : (' — '+money(x.net)+' ج.م'));
+      col.appendChild(bar);
+      var lbl=document.createElement('div'); lbl.className='bar-label'; lbl.textContent=x.date.slice(8,10);
+      col.appendChild(lbl);
+      chart.appendChild(col);
+    });
+    chartCard.appendChild(chart);
+    container.appendChild(chartCard);
+
+    var salesTitle=document.createElement('h3'); salesTitle.className='section-title'; salesTitle.textContent='مبيعات الأصناف في الفترة (من الأوردرات المسجّلة)';
+    container.appendChild(salesTitle);
+    var revNote=document.createElement('div'); revNote.className='cat-note';
+    revNote.innerHTML='الإيراد المتوقع من الأوردرات المسجّلة: <b>'+money(ordersRevenueTotal)+' ج.م</b> — قارنه بإجمالي المبيعات الفعلي في الإقفال اليومي (<b>'+money(totalSales)+' ج.م</b>) عشان تتأكد كل حاجة متسجلة صح.';
+    container.appendChild(revNote);
+
+    var orderedIds = Object.keys(ordersByItem);
+    if(orderedIds.length===0){
+      var eo=document.createElement('div'); eo.className='empty'; eo.textContent='لسه مفيش أوردرات متسجلة في الفترة دي — سجلها من "مبيعات الأصناف".';
+      container.appendChild(eo);
+    } else {
+      var scroll1=document.createElement('div'); scroll1.className='table-scroll';
+      var table1=document.createElement('table'); table1.className='ing-master';
+      table1.innerHTML='<tr><th>الصنف</th><th>عدد الأوردرات</th><th>الإيراد</th></tr>';
+      state.items.forEach(function(it){
+        if(!ordersByItem[it.id]) return;
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td><b>'+esc(it.name)+'</b></td><td>'+money(ordersByItem[it.id])+'</td><td>'+money(ordersByItem[it.id]*it.price)+' ج.م</td>';
+        table1.appendChild(tr);
+      });
+      scroll1.appendChild(table1); container.appendChild(scroll1);
+
+      var consTitle=document.createElement('h3'); consTitle.className='section-title'; consTitle.textContent='استهلاك الخامات المتوقع في الفترة';
+      container.appendChild(consTitle);
+      var scroll2b=document.createElement('div'); scroll2b.className='table-scroll';
+      var table2b=document.createElement('table'); table2b.className='ing-master';
+      var rows2b='<tr><th>الخامة</th><th>الكمية المتوقع استهلاكها</th><th>التكلفة</th></tr>';
+      Object.keys(consumptionTotal).sort(function(a,b){return a.localeCompare(b,'ar');}).forEach(function(k){
+        var parts=k.split('|');
+        var mat = materialsByName[parts[0]];
+        var costCell = (mat && mat.price!==undefined && mat.price!=='') ? (money(consumptionTotal[k]*Number(mat.price))+' ج.م') : '<span class="used-in">سعر الوحدة مش مسجل</span>';
+        rows2b += '<tr><td><b>'+esc(parts[0])+'</b></td><td>'+money(consumptionTotal[k])+' '+esc(parts[1])+'</td><td>'+costCell+'</td></tr>';
+      });
+      table2b.innerHTML = rows2b;
+      scroll2b.appendChild(table2b); container.appendChild(scroll2b);
+
+      var cogsCard=document.createElement('div'); cogsCard.className='card'; cogsCard.style.marginTop='12px';
+      cogsCard.innerHTML='<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>إجمالي تكلفة الخامات المستهلكة</span><b>'+money(ingredientCost)+' ج.م</b></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>هامش الربح (الإيراد من الأوردرات − تكلفة الخامات)</span><b style="color:var(--accent);">'+money(ordersRevenueTotal-ingredientCost)+' ج.م</b></div>'+
+        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>تكلفة الهالك والمرتجع في الفترة</span><b style="color:var(--warn);">'+money(wasteCost)+' ج.م</b></div>';
+      container.appendChild(cogsCard);
+    }
+
+    var actualTitle=document.createElement('h3'); actualTitle.className='section-title'; actualTitle.textContent='استهلاك الخامات الفعلي (من حركة المخزون) في الفترة';
+    container.appendChild(actualTitle);
+    var actualNote=document.createElement('div'); actualNote.className='cat-note';
+    actualNote.innerHTML='محسوبة من أرقام "حركة الخامات اليومية" الحقيقية (بداية − نهاية − هالك) في '+stockDaysCount+' يوم متسجل — قارنها بجدول "الاستهلاك المتوقع من الأوردرات" فوق عشان تتأكد الاتنين متقاربين.';
+    container.appendChild(actualNote);
+    var actualIds = Object.keys(actualConsumption);
+    if(actualIds.length===0){
+      var eaEmpty=document.createElement('div'); eaEmpty.className='empty'; eaEmpty.textContent='لسه مفيش أرقام بداية/نهاية يوم متسجلة في الفترة دي.';
+      container.appendChild(eaEmpty);
+    } else {
+      var scroll2c=document.createElement('div'); scroll2c.className='table-scroll';
+      var table2c=document.createElement('table'); table2c.className='ing-master';
+      var rows2c='<tr><th>الخامة</th><th>الاستهلاك الفعلي</th><th>هالك/مرتجع</th></tr>';
+      state.materials.forEach(function(m){
+        if(!actualConsumption[m.id] && !wasteQtyByMat[m.id]) return;
+        rows2c += '<tr><td><b>'+esc(m.name)+'</b></td><td>'+money(actualConsumption[m.id]||0)+' '+esc(m.unit)+'</td><td'+(wasteQtyByMat[m.id]?' style="color:var(--warn);"':'')+'>'+money(wasteQtyByMat[m.id]||0)+' '+esc(m.unit)+'</td></tr>';
+      });
+      table2c.innerHTML = rows2c;
+      scroll2c.appendChild(table2c); container.appendChild(scroll2c);
+    }
+
+    var wageTitle=document.createElement('h3'); wageTitle.className='section-title'; wageTitle.textContent='الأجور والمصاريف الثابتة';
+    container.appendChild(wageTitle);
+    var wageCard=document.createElement('div'); wageCard.className='card';
+    wageCard.innerHTML='<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>إجمالي أجور العمال في الفترة</span><b>'+money(staffWagesTotal)+' ج.م</b></div>'+
+      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>مصاريف ثابتة شهرية (مش محسوبة في صافي الربح تلقائيًا)</span><b>'+money(fixedCostsMonthly)+' ج.م</b></div>';
+    container.appendChild(wageCard);
+
+    var supTitle=document.createElement('h3'); supTitle.className='section-title'; supTitle.textContent='أرصدة الموردين الحالية';
+    container.appendChild(supTitle);
+    var scroll2=document.createElement('div'); scroll2.className='table-scroll';
+    var table2=document.createElement('table'); table2.className='ing-master';
+    table2.innerHTML='<tr><th>المورد</th><th>طريقة الدفع</th><th>الرصيد المستحق</th></tr>';
+    state.suppliers.forEach(function(s){
+      var entries = state.supplierLedger[s.id]||[];
+      var bal = entries.reduce(function(sum,e){ return sum + (e.type==='فاتورة' ? (Number(e.amount)||0) : -(Number(e.amount)||0)); },0);
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><b>'+esc(s.name)+'</b></td><td class="used-in">'+esc(s.paymentTerms)+'</td><td'+(bal>0?' style="color:var(--warn);font-weight:700;"':'')+'>'+money(bal)+' ج.م</td>';
+      table2.appendChild(tr);
+    });
+    scroll2.appendChild(table2); container.appendChild(scroll2);
+  }
+
+  /* ================= ROOT RENDER ================= */
+  function render(){
+    renderSidebar();
+    var body=document.getElementById('moduleBody');
+    body.innerHTML='';
+    if(currentModule==='menu') renderMenuModule(body);
+    else if(currentModule==='inventory') renderInventoryModule(body);
+    else if(currentModule==='staff') renderStaffModule(body);
+    else if(currentModule==='pos') renderPosModule(body);
+    else if(currentModule==='reports') renderReportsModule(body);
+  }
+
+  function setSaveStatus(mode){
+    var dot=document.getElementById('saveDot'), txt=document.getElementById('saveText');
+    if(!dot || !txt) return;
+    dot.className='dot';
+    if(mode==='saving'){ dot.classList.add('busy'); txt.textContent='بيحفظ...'; }
+    else if(mode==='saved'){ txt.textContent='اتحفظ'; }
+    else if(mode==='off'){ dot.classList.add('off'); txt.textContent='الحفظ غير متاح دلوقتي — اتأكد من النت'; }
+    else if(mode==='conflict'){ dot.classList.add('off'); txt.textContent='حصل تعديل من مكان تاني — الصفحة اتحدثت'; }
+    else { dot.classList.add('off'); txt.textContent='جاهز'; }
+  }
+
+  async function loadState(){
+    var res = await fetch(BACKEND_URL, {method:'GET', cache:'no-store'});
+    var data = await res.json();
+    state = (data && data.state && Object.keys(data.state).length) ? data.state : null;
+    dataVersion = (data && data.version) || 0;
+    if(!state) throw new Error('empty state');
+  }
+
+  async function persist(){
+    if(!cashierMode) setSaveStatus('saving');
+    try{
+      var res = await fetch(BACKEND_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'},
+        body: JSON.stringify({state: state, expectedVersion: dataVersion})
+      });
+      var data = await res.json();
+      if(data && data.ok){
+        dataVersion = data.version;
+        if(cashierMode){ renderCashier(); } else { render(); setSaveStatus('saved'); }
+      } else if(data && data.code==='conflict'){
+        state = data.state;
+        dataVersion = data.version;
+        if(cashierMode){ renderCashier(); alert('حصل تحديث من جهاز تاني في نفس اللحظة — الشاشة اتحدثت لآخر نسخة. اعمل عمليتك تاني لو لسه محتاجها.'); }
+        else { render(); setSaveStatus('conflict'); }
+      } else {
+        if(cashierMode){ alert('العملية دي ماتسجلتش. اتأكد من النت وحاول تاني.'); } else { setSaveStatus('off'); }
+      }
+    }catch(err){
+      if(cashierMode){ alert('مفيش اتصال بالنت دلوقتي. اتأكد من النت وحاول تاني.'); renderCashier(); } else { setSaveStatus('off'); }
+    }
+  }
+
+  async function init(){
+    var cashierOn = false;
+    try{
+      if(location.hash === '#cashier'){ localStorage.setItem('cashierDeviceMode','on'); cashierOn = true; }
+      else { cashierOn = localStorage.getItem('cashierDeviceMode')==='on'; }
+    }catch(e){ cashierOn = (location.hash === '#cashier'); }
+    cashierMode = cashierOn;
+
+    if(cashierMode){
+      document.querySelector('.shell').style.display='none';
+      var cr = document.getElementById('cashRoot'); cr.style.display='';
+    }
+
+    try{
+      await loadState();
+    }catch(e){
+      var loader = document.getElementById('loadingScreen');
+      if(loader){ loader.innerHTML = '<div style="padding:40px;text-align:center;">⚠️ مفيش اتصال بالنظام. اتأكد من النت وحدّث الصفحة.</div>'; }
+      return;
+    }
+    var loaderEl = document.getElementById('loadingScreen');
+    if(loaderEl) loaderEl.remove();
+
+    activeCat = state.categories[0].id;
+
+    if(cashierMode){
+      var savedStaffId = cashierSessionLoad();
+      if(savedStaffId && state.staff.some(function(s){return s.id===savedStaffId;})){
+        cashierStaffId = savedStaffId;
+      }
+      renderCashier();
+    } else {
+      render();
+      setSaveStatus('saved');
+    }
+  }
+
+  /* ================= CASHIER MODE ================= */
+  var cashierMode = false;
+  var cashierStaffId = null;
+  var cashierPendingStaffId = null;
+  var cashierPinBuffer = '';
+  var cashierError = '';
+
+  function todayStr(){ return toLocalDateStr(new Date()); }
+
+  function cashierSessionSave(){ try{ sessionStorage.setItem('cashierStaffId', cashierStaffId||''); }catch(e){} }
+  function cashierSessionLoad(){ try{ return sessionStorage.getItem('cashierStaffId')||''; }catch(e){ return ''; } }
+  function cashierSessionClear(){ try{ sessionStorage.removeItem('cashierStaffId'); }catch(e){} }
+
+  function renderCashier(){
+    var root = document.getElementById('cashRoot');
+    root.innerHTML = '';
+    var shell = document.createElement('div'); shell.className='cash-shell';
+    var wrap = document.createElement('div'); wrap.className='cash-wrap';
+    shell.appendChild(wrap);
+    root.appendChild(shell);
+    if(!cashierStaffId){ renderCashierLogin(wrap); }
+    else { renderCashierWorking(wrap); }
+  }
+
+  function renderCashierLogin(wrap){
+    var brand=document.createElement('div'); brand.className='cash-brand';
+    brand.innerHTML='<div class="mark">🍽️</div><h1>نظام الكاشير</h1><p>سجّل دخولك عشان تبدأ</p>';
+    wrap.appendChild(brand);
+
+    if(!cashierPendingStaffId){
+      var grid=document.createElement('div'); grid.className='cash-staff-grid';
+      var eligible = state.staff.filter(function(s){return s.pin;});
+      if(eligible.length===0){
+        var e=document.createElement('div'); e.className='empty'; e.textContent='مفيش عمال معاهم PIN مسجّل. كلم صاحب النظام.';
+        wrap.appendChild(e); return;
+      }
+      eligible.forEach(function(s){
+        var b=document.createElement('button'); b.className='cash-staff-btn'; b.textContent=s.name;
+        b.onclick=function(){ cashierPendingStaffId=s.id; cashierPinBuffer=''; cashierError=''; renderCashier(); };
+        grid.appendChild(b);
+      });
+      wrap.appendChild(grid);
+    } else {
+      var staff = state.staff.find(function(s){return s.id===cashierPendingStaffId;});
+      var who=document.createElement('div'); who.style.cssText='text-align:center;font-weight:700;font-size:15px;margin-bottom:6px;';
+      who.textContent = staff ? staff.name : '';
+      wrap.appendChild(who);
+
+      var dots=document.createElement('div'); dots.className='cash-pin-dots';
+      var pinLen = staff ? staff.pin.length : 4;
+      for(var i=0;i<Math.max(pinLen,4);i++){
+        var d=document.createElement('div'); d.className='cash-pin-dot'+(i<cashierPinBuffer.length?' filled':'');
+        dots.appendChild(d);
+      }
+      wrap.appendChild(dots);
+
+      if(cashierError){
+        var errEl=document.createElement('div'); errEl.style.cssText='color:var(--warn);text-align:center;font-size:13px;font-weight:700;margin-bottom:8px;';
+        errEl.textContent=cashierError;
+        wrap.appendChild(errEl);
+      }
+
+      var pad=document.createElement('div'); pad.className='cash-pinpad';
+      function tryLogin(){
+        if(staff && cashierPinBuffer===staff.pin){
+          cashierStaffId=staff.id; cashierPendingStaffId=null; cashierPinBuffer=''; cashierError='';
+          cashierSessionSave();
+          renderCashier();
+        } else if(cashierPinBuffer.length>=6){
+          cashierError='الرقم غلط، جرب تاني'; cashierPinBuffer='';
+          renderCashier();
+        }
+      }
+      ['1','2','3','4','5','6','7','8','9','⌫','0','✓'].forEach(function(k){
+        var b=document.createElement('button'); b.textContent=k;
+        b.onclick=function(){
+          if(k==='⌫'){ cashierPinBuffer=cashierPinBuffer.slice(0,-1); renderCashier(); }
+          else if(k==='✓'){ tryLogin(); }
+          else { cashierPinBuffer+=k; if(staff && cashierPinBuffer.length===staff.pin.length){ tryLogin(); } else { renderCashier(); } }
+        };
+        pad.appendChild(b);
+      });
+      wrap.appendChild(pad);
+
+      var backBtn=document.createElement('button'); backBtn.className='btn ghost'; backBtn.style.width='100%';
+      backBtn.textContent='رجوع';
+      backBtn.onclick=function(){ cashierPendingStaffId=null; cashierPinBuffer=''; cashierError=''; renderCashier(); };
+      wrap.appendChild(backBtn);
+    }
+  }
+
+  function renderCashierWorking(wrap){
+    var staff = state.staff.find(function(s){return s.id===cashierStaffId;});
+    var today = todayStr();
+    var ordersArr = ensureOrdersForDate(today);
+    var closing = ensureClosing(today);
+    var cart = {};
+
+    function markEntered(){
+      closing.sales = revenueForOrders(aggregateOrderItems(ordersArr));
+      closing.enteredByLog = closing.enteredByLog||[];
+      var mine = closing.enteredByLog.find(function(e){return e.staffId===cashierStaffId;});
+      if(mine){ mine.at=new Date().toISOString(); }
+      else { closing.enteredByLog.push({staffId:cashierStaffId, staffName:staff?staff.name:'', at:new Date().toISOString()}); }
+    }
+
+    function saveNow(){ markEntered(); cashierSessionSave(); persist(); }
+
+    var header=document.createElement('div'); header.className='cash-header';
+    var who=document.createElement('div'); who.className='who'; who.textContent='👋 '+(staff?staff.name:'');
+    var logoutBtn=document.createElement('button'); logoutBtn.className='btn ghost'; logoutBtn.textContent='تسجيل خروج';
+    logoutBtn.onclick=function(){
+      cashierSessionClear();
+      cashierStaffId=null;
+      renderCashier();
+    };
+    header.appendChild(who); header.appendChild(logoutBtn);
+    wrap.appendChild(header);
+
+    var netBox=document.createElement('div'); netBox.className='cash-net';
+    var netVal;
+    netBox.innerHTML='<div class="lbl">الصافي المتوقع النهاردة</div>';
+    netVal=document.createElement('div'); netVal.className='val';
+    netBox.appendChild(netVal);
+    wrap.appendChild(netBox);
+    var syncNote=document.createElement('div'); syncNote.className='cash-sync-note';
+    syncNote.textContent='كل أوردر بتسجّله بيوصل لصاحب المطعم فورًا بمجرد ما تدوس "تسجيل الأوردر"';
+    wrap.appendChild(syncNote);
+
+    function recomputeNet(){
+      netVal.textContent = money(revenueForOrders(aggregateOrderItems(ordersArr)) - expensesTotal(closing)) + ' ج.م';
+    }
+
+    var cartSection=document.createElement('div'); cartSection.className='cash-section';
+    var cartTitle=document.createElement('h3'); cartTitle.textContent='🧾 الأوردر الحالي';
+    cartSection.appendChild(cartTitle);
+    var cartSubtotal=document.createElement('div'); cartSubtotal.className='cash-cart-subtotal';
+    cartSection.appendChild(cartSubtotal);
+
+    function recomputeCart(){
+      var t = orderTotal(cart);
+      cartSubtotal.textContent = t>0 ? ('إجمالي الأوردر ده: '+money(t)+' ج.م') : 'اختار الأصناف اللي في الأوردر ده';
+    }
+
+    state.categories.forEach(function(cat){
+      var catLbl=document.createElement('div'); catLbl.style.cssText='font-size:12.5px;color:var(--ink-dim);font-weight:700;margin:10px 0 6px;';
+      catLbl.textContent=(CAT_ICON[cat.id]||'')+' '+cat.label;
+      cartSection.appendChild(catLbl);
+      itemsFor(cat.id).forEach(function(item){
+        var row=document.createElement('div'); row.className='cash-item-row';
+        var info=document.createElement('div');
+        info.innerHTML='<div class="nm">'+esc(item.name)+'</div><div class="pr">'+money(item.price)+' ج.م</div>';
+
+        var stepper=document.createElement('div'); stepper.className='cash-stepper';
+        var minusBtn=document.createElement('button'); minusBtn.type='button'; minusBtn.className='cash-step-btn'; minusBtn.textContent='−';
+        var countEl=document.createElement('div'); countEl.className='cash-step-count'; countEl.textContent='0';
+        var plusBtn=document.createElement('button'); plusBtn.type='button'; plusBtn.className='cash-step-btn plus'; plusBtn.textContent='+';
+
+        function setQty(q){
+          q = Math.max(0, q|0);
+          if(q>0){ cart[item.id]=q; } else { delete cart[item.id]; }
+          countEl.textContent=String(q);
+          recomputeCart();
+        }
+        minusBtn.onclick=function(){ setQty((Number(cart[item.id])||0)-1); };
+        plusBtn.onclick=function(){ setQty((Number(cart[item.id])||0)+1); };
+        countEl.onclick=function(){
+          var val = prompt('اكتب عدد "'+item.name+'" في الأوردر ده:', String(Number(cart[item.id])||0));
+          if(val===null) return;
+          var n = parseInt(val,10);
+          if(isNaN(n) || n<0) return;
+          setQty(n);
+        };
+
+        stepper.appendChild(minusBtn); stepper.appendChild(countEl); stepper.appendChild(plusBtn);
+        row.appendChild(info); row.appendChild(stepper);
+        cartSection.appendChild(row);
+      });
+    });
+
+    recomputeCart();
+
+    var submitBtn=document.createElement('button'); submitBtn.className='btn primary'; submitBtn.style.width='100%'; submitBtn.style.padding='14px'; submitBtn.style.marginTop='10px';
+    submitBtn.textContent='✅ تسجيل الأوردر';
+    submitBtn.onclick=async function(){
+      var keys = Object.keys(cart).filter(function(id){return (Number(cart[id])||0)>0;});
+      if(keys.length===0){ alert('اختار صنف واحد على الأقل الأول'); return; }
+      var order = {id:'o'+Date.now()+'_'+Math.random().toString(36).slice(2,8), at:new Date().toISOString(), staffId:cashierStaffId, staffName:staff?staff.name:'', items:{}};
+      keys.forEach(function(id){ order.items[id]=Number(cart[id]); });
+
+      ordersArr.push(order);
+      markEntered();
+      cashierSessionSave();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ بيتسجل...';
+      await persist();
+    };
+    cartSection.appendChild(submitBtn);
+    wrap.appendChild(cartSection);
+
+    var logSection=document.createElement('div'); logSection.className='cash-section';
+    var logTitle=document.createElement('h3'); logTitle.textContent='📋 أوردرات اليوم';
+    logSection.appendChild(logTitle);
+    var realOrders = ordersArr.filter(function(o){return o.id!=='manual';}).slice().sort(function(a,b){return (b.at||'').localeCompare(a.at||'');});
+    if(realOrders.length>0){
+      var lastOrder = realOrders[0];
+      var undoBtn=document.createElement('button'); undoBtn.className='btn ghost'; undoBtn.style.width='100%'; undoBtn.style.marginBottom='10px';
+      undoBtn.textContent='↩️ تراجع عن آخر أوردر ('+money(orderTotal(lastOrder.items))+' ج.م)';
+      undoBtn.onclick=function(){
+        if(!confirm('تلغي آخر أوردر؟ استخدمها لو الزبون غيّر طلبه بس دلوقتي.')) return;
+        var idx = ordersArr.indexOf(lastOrder);
+        if(idx>=0) ordersArr.splice(idx,1);
+        saveNow();
+      };
+      logSection.appendChild(undoBtn);
+    }
+    var logList=document.createElement('div');
+    if(realOrders.length===0){
+      logList.innerHTML='<div class="empty">لسه مفيش أوردرات مسجّلة النهاردة</div>';
+    } else {
+      logList.innerHTML = realOrders.map(function(o){
+        var t = o.at ? new Date(o.at).toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) : '';
+        var lines = Object.keys(o.items||{}).map(function(id){
+          var it=state.items.find(function(x){return x.id===id;});
+          return (it?it.name:id)+' × '+o.items[id];
+        }).join('، ');
+        return '<div class="order-log-row"><div class="olr-top"><span>'+t+'</span><b>'+money(orderTotal(o.items))+' ج.م</b></div><div class="olr-items">'+esc(lines)+'</div></div>';
+      }).join('');
+    }
+    logSection.appendChild(logList);
+    wrap.appendChild(logSection);
+
+    var expSection=document.createElement('div'); expSection.className='cash-section';
+    var expTitle=document.createElement('h3'); expTitle.textContent='💵 مصروف سريع';
+    expSection.appendChild(expTitle);
+    var expList=document.createElement('div');
+    function renderExpList(){
+      expList.innerHTML='';
+      closing.expenses.forEach(function(exp, idx){
+        var row=document.createElement('div'); row.className='ing-edit-row'; row.style.marginBottom='7px';
+        var dField=document.createElement('div'); dField.className='field'; dField.innerHTML='<label>البيان</label>';
+        var dInp=document.createElement('input'); dInp.value=exp.desc; dInp.oninput=function(){ exp.desc=dInp.value; }; dInp.onblur=function(){ saveNow(); };
+        dField.appendChild(dInp);
+        var aField=document.createElement('div'); aField.className='field small'; aField.innerHTML='<label>المبلغ</label>';
+        var aInp=document.createElement('input'); aInp.type='number'; aInp.value=exp.amount; aInp.oninput=function(){ exp.amount=aInp.value; recomputeNet(); }; aInp.onblur=function(){ saveNow(); };
+        aField.appendChild(aInp);
+        var rm=document.createElement('button'); rm.className='icon-btn'; rm.textContent='✕';
+        rm.onclick=function(){ closing.expenses.splice(idx,1); recomputeNet(); renderExpList(); saveNow(); };
+        row.appendChild(dField); row.appendChild(aField); row.appendChild(rm);
+        expList.appendChild(row);
+      });
+    }
+    renderExpList();
+    expSection.appendChild(expList);
+    var addExpBtn=document.createElement('button'); addExpBtn.className='btn ghost'; addExpBtn.style.width='100%'; addExpBtn.style.marginTop='6px';
+    addExpBtn.textContent='+ إضافة مصروف';
+    addExpBtn.onclick=function(){ closing.expenses.push({desc:'',amount:''}); renderExpList(); };
+    expSection.appendChild(addExpBtn);
+    wrap.appendChild(expSection);
+
+    recomputeNet();
+
+    var exitLink=document.createElement('button'); exitLink.className='cash-exit-link'; exitLink.textContent='🔒 خروج من وضع الكاشير (المالك فقط)';
+    exitLink.onclick=function(){ renderCashierOwnerExit(wrap); };
+    wrap.appendChild(exitLink);
+  }
+
+  async function renderCashierOwnerExit(wrap){
+    var pin = prompt('الرقم السري للمالك:');
+    if(pin===null) return;
+    if(pin===state.ownerPin){
+      try{ localStorage.removeItem('cashierDeviceMode'); }catch(e){}
+      cashierSessionClear();
+      location.reload();
+    } else {
+      alert('رقم غلط.');
+    }
+  }
+
+  init();
+})();
+</script>
+
+
+
+</body></html>
