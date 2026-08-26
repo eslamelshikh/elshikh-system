@@ -1735,6 +1735,21 @@
     else { dot.classList.add('off'); txt.textContent='جاهز'; }
   }
 
+  var CACHE_KEY = 'elshikh_cached_state_v1';
+
+  function loadCachedState(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      if(!raw) return null;
+      var parsed = JSON.parse(raw);
+      if(!parsed || !parsed.state) return null;
+      return parsed;
+    }catch(e){ return null; }
+  }
+  function saveCachedState(){
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify({state: state, version: dataVersion})); }catch(e){}
+  }
+
   async function loadState(){
     var res = await fetch(BACKEND_URL, {method:'GET', cache:'no-store'});
     var data = await res.json();
@@ -1754,10 +1769,12 @@
       var data = await res.json();
       if(data && data.ok){
         dataVersion = data.version;
+        saveCachedState();
         if(cashierMode){ renderCashier(); } else { render(); setSaveStatus('saved'); }
       } else if(data && data.code==='conflict'){
         state = data.state;
         dataVersion = data.version;
+        saveCachedState();
         if(cashierMode){ renderCashier(); alert('حصل تحديث من جهاز تاني في نفس اللحظة — الشاشة اتحدثت لآخر نسخة. اعمل عمليتك تاني لو لسه محتاجها.'); }
         else { render(); setSaveStatus('conflict'); }
       } else {
@@ -1765,6 +1782,22 @@
       }
     }catch(err){
       if(cashierMode){ alert('مفيش اتصال بالنت دلوقتي. اتأكد من النت وحاول تاني.'); renderCashier(); } else { setSaveStatus('off'); }
+    }
+  }
+
+  function renderApp(){
+    var loaderEl = document.getElementById('loadingScreen');
+    if(loaderEl) loaderEl.remove();
+    activeCat = state.categories[0].id;
+    if(cashierMode){
+      var savedStaffId = cashierSessionLoad();
+      if(savedStaffId && state.staff.some(function(s){return s.id===savedStaffId;})){
+        cashierStaffId = savedStaffId;
+      }
+      renderCashier();
+    } else {
+      render();
+      setSaveStatus('saved');
     }
   }
 
@@ -1781,28 +1814,28 @@
       var cr = document.getElementById('cashRoot'); cr.style.display='';
     }
 
+    // show cached data instantly if we have it, then refresh in the background —
+    // avoids a multi-second blank/loading wait on every single open
+    var cached = loadCachedState();
+    if(cached){
+      state = cached.state;
+      dataVersion = cached.version || 0;
+      renderApp();
+    }
+
     try{
       await loadState();
     }catch(e){
-      var loader = document.getElementById('loadingScreen');
-      if(loader){ loader.innerHTML = '<div style="padding:40px;text-align:center;">⚠️ مفيش اتصال بالنظام. اتأكد من النت وحدّث الصفحة.</div>'; }
+      if(!cached){
+        var loader = document.getElementById('loadingScreen');
+        if(loader){ loader.innerHTML = '<div style="padding:40px;text-align:center;">⚠️ مفيش اتصال بالنظام. اتأكد من النت وحدّث الصفحة.</div>'; }
+      }
       return;
     }
-    var loaderEl = document.getElementById('loadingScreen');
-    if(loaderEl) loaderEl.remove();
 
-    activeCat = state.categories[0].id;
-
-    if(cashierMode){
-      var savedStaffId = cashierSessionLoad();
-      if(savedStaffId && state.staff.some(function(s){return s.id===savedStaffId;})){
-        cashierStaffId = savedStaffId;
-      }
-      renderCashier();
-    } else {
-      render();
-      setSaveStatus('saved');
-    }
+    var changed = !cached || cached.version !== dataVersion;
+    saveCachedState();
+    if(changed){ renderApp(); }
   }
 
   /* ================= CASHIER MODE ================= */
