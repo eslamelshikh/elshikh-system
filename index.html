@@ -347,7 +347,7 @@
   var posDate = toLocalDateStr(new Date());
   var selectedSupplierId = null;
 
-  var CAT_ICON = {meals:'🍗', sandwiches:'🥙', tassa:'🍢'};
+  var CAT_ICON = {meals:'🍗', sandwiches:'🥙', tassa:'🍢', burger:'🍔', syrian:'🌯', crepeSavory:'🫓', crepeSweet:'🍫'};
 
   function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
   function itemsFor(cat){ return state.items.filter(function(i){return i.category===cat;}); }
