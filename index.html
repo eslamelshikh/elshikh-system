@@ -1949,23 +1949,54 @@
     try{ localStorage.setItem(CACHE_KEY, JSON.stringify({state: state, version: dataVersion})); }catch(e){}
   }
 
+  async function fetchJson(url, options){
+    var res = await fetch(url, options);
+    var text = await res.text();
+    try { return JSON.parse(text); }
+    catch(e){ throw new Error('not_json'); }
+  }
+
+  // Google sometimes answers with an HTML "page not found" even though the script ran,
+  // so reads are retried a few times before giving up.
+  async function fetchStateWithRetry(){
+    var lastErr = null;
+    for(var i=0; i<3; i++){
+      try{
+        var data = await fetchJson(BACKEND_URL + '?t=' + Date.now(), {method:'GET', cache:'no-store'});
+        if(data && data.state && Object.keys(data.state).length) return data;
+        lastErr = new Error((data && data.message) || 'empty state');
+      }catch(e){ lastErr = e; }
+      if(i < 2) await new Promise(function(r){ setTimeout(r, 1500*(i+1)); });
+    }
+    throw lastErr;
+  }
+
   async function loadState(){
-    var res = await fetch(BACKEND_URL, {method:'GET', cache:'no-store'});
-    var data = await res.json();
-    state = (data && data.state && Object.keys(data.state).length) ? data.state : null;
-    dataVersion = (data && data.version) || 0;
-    if(!state) throw new Error('empty state');
+    var data = await fetchStateWithRetry();
+    state = data.state;
+    dataVersion = data.version || 0;
   }
 
   async function persist(){
     if(!cashierMode) setSaveStatus('saving');
+    var sentState = JSON.stringify(state);
+    var sentVersion = dataVersion;
     try{
-      var res = await fetch(BACKEND_URL, {
-        method:'POST',
-        headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body: JSON.stringify({state: state, expectedVersion: dataVersion})
-      });
-      var data = await res.json();
+      var data;
+      try{
+        data = await fetchJson(BACKEND_URL, {
+          method:'POST',
+          headers:{'Content-Type':'text/plain;charset=utf-8'},
+          body: JSON.stringify({state: state, expectedVersion: sentVersion})
+        });
+      }catch(sendErr){
+        // No readable answer. Look at what the server has before calling it a failure:
+        // the save may have gone through even though the reply got lost.
+        var server = await fetchStateWithRetry();
+        if(JSON.stringify(server.state) === sentState) data = {ok:true, version: server.version};
+        else if(server.version === sentVersion) data = {ok:false, code:'not_saved'};
+        else data = {ok:false, code:'conflict', version: server.version, state: server.state};
+      }
       if(data && data.ok){
         dataVersion = data.version;
         saveCachedState();
