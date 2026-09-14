@@ -411,6 +411,23 @@
         var note=document.createElement('div'); note.className='cat-note'; note.innerHTML=cat.note;
         container.appendChild(note);
       }
+      if(cat){
+        var rentRow=document.createElement('div'); rentRow.className='cat-note';
+        rentRow.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;';
+        var rentLbl=document.createElement('span'); rentLbl.textContent='نسبة الإيجار للقسم ده من سعر البيع:';
+        var rentInp=document.createElement('input'); rentInp.type='number'; rentInp.step='any'; rentInp.min='0'; rentInp.style.width='90px';
+        rentInp.value = (cat.rentRate==null ? '' : cat.rentRate);
+        var rentPct=document.createElement('span'); rentPct.textContent='%';
+        var rentWarn=document.createElement('span'); rentWarn.className='used-in';
+        if(categoryRentRate(cat.id)===null) rentWarn.textContent='⚠ مفيش نسبة، التقارير هتحسب '+FALLBACK_RENT_RATE+'% لحد ما تحددها';
+        rentInp.onchange=function(){
+          var v = rentInp.value.trim();
+          cat.rentRate = v==='' ? '' : Number(v);
+          persist();
+        };
+        rentRow.appendChild(rentLbl); rentRow.appendChild(rentInp); rentRow.appendChild(rentPct); rentRow.appendChild(rentWarn);
+        container.appendChild(rentRow);
+      }
     }
   }
 
@@ -825,6 +842,118 @@
     return total;
   }
 
+  /* ================= COST ENGINE ================= */
+  // Same rules as the owner's cost analysis: grams against a per-kilo price, pack prices
+  // ("100 طبق", "250 جم") split per piece, and chicken priced per whole bird.
+  var CHICKEN_PORTIONS = {'فرخة كاملة':1, 'فرخة':1, 'نص فرخة':0.5, 'ربع فرخة':0.25};
+  var COUNT_UNITS = {'عدد':true, 'قطعة':true, 'طبق':true, 'علبة':true, 'ملعقة':true, 'شوكة':true};
+  var FALLBACK_RENT_RATE = 15;
+
+  function lineCostFactor(ing, mat){
+    var iu = String(ing.unit==null?'':ing.unit).trim(), mu = String(mat.unit==null?'':mat.unit).trim();
+    if(mu==='فرخة' && CHICKEN_PORTIONS[iu]!==undefined) return CHICKEN_PORTIONS[iu];
+    if(mu==='كجم' && iu==='جم') return 0.001;
+    if(mu==='لتر' && iu==='مل') return 0.001;
+    if(mu===iu) return 1;
+    var pack = mu.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
+    if(pack && Number(pack[1])>0){
+      var label = pack[2].trim();
+      if(label==='جم') return iu==='جم' ? 1/Number(pack[1]) : null;
+      if(COUNT_UNITS[iu]) return 1/Number(pack[1]);
+    }
+    if(mu==='عدد' && COUNT_UNITS[iu]) return 1;
+    return null;
+  }
+
+  function materialsByNameMap(){
+    var m={};
+    state.materials.forEach(function(x){ m[x.name]=x; });
+    return m;
+  }
+
+  function hasPrice(mat){ return !!mat && mat.price!=='' && mat.price!=null && !isNaN(Number(mat.price)); }
+
+  function itemCostInfo(item, matIdx){
+    var cost=0, problems=[];
+    (item.ingredients||[]).forEach(function(ing){
+      var mat = matIdx[ing.name];
+      var qty = Number(ing.qty);
+      if(!mat){ problems.push(ing.name+': مش موجودة في قايمة الخامات'); return; }
+      if(!hasPrice(mat)){ problems.push(ing.name+': الخامة من غير سعر'); return; }
+      if(ing.qty==='' || ing.qty==null || isNaN(qty)){ problems.push(ing.name+': الكمية مش رقم'); return; }
+      var f = lineCostFactor(ing, mat);
+      if(f===null){ problems.push(ing.name+': وحدة الوصفة ('+ing.unit+') مش متوافقة مع وحدة الخامة ('+mat.unit+')'); return; }
+      cost += qty*f*Number(mat.price);
+    });
+    return {cost:cost, problems:problems};
+  }
+
+  function categoryRentRate(catId){
+    var cat = state.categories.find(function(c){ return c.id===catId; });
+    if(!cat || cat.rentRate==='' || cat.rentRate==null || isNaN(Number(cat.rentRate))) return null;
+    return Number(cat.rentRate);
+  }
+
+  function settingNumber(key){
+    var s = (state.settings && typeof state.settings==='object') ? state.settings : {};
+    if(s[key]==='' || s[key]==null || isNaN(Number(s[key]))) return 0;
+    return Number(s[key]);
+  }
+
+  // Everything for one day. Sales = the closing's entered sales if any, otherwise the orders.
+  // Rent follows each item's category and is scaled to the actual sales figure.
+  function dayFinance(date, matIdx){
+    matIdx = matIdx || materialsByNameMap();
+    var problems=[];
+    var closing = state.dailyClosings[date];
+    var agg = aggregateOrderItems(state.orders[date]);
+    var ordersRevenue=0, materials=0, ordersRent=0;
+    Object.keys(agg).forEach(function(id){
+      var qty = Number(agg[id])||0;
+      if(!qty) return;
+      var it = state.items.find(function(x){ return x.id===id; });
+      if(!it){ problems.push('صنف ليه أوردرات بس مش موجود في المنيو ('+id+')'); return; }
+      var price = Number(it.price)||0;
+      ordersRevenue += qty*price;
+      var info = itemCostInfo(it, matIdx);
+      materials += qty*info.cost;
+      info.problems.forEach(function(p){ problems.push(it.name+': '+p); });
+      var rr = categoryRentRate(it.category);
+      if(rr===null){ rr = FALLBACK_RENT_RATE; problems.push('قسم "'+it.category+'" مالوش نسبة إيجار، اتحسب '+FALLBACK_RENT_RATE+'%'); }
+      ordersRent += qty*price*rr/100;
+    });
+    var salesEntered = !!closing && closing.sales!=='' && closing.sales!=null;
+    var sales = salesEntered ? (Number(closing.sales)||0) : ordersRevenue;
+    var rent;
+    if(ordersRevenue>0){ rent = ordersRent*(sales/ordersRevenue); }
+    else {
+      rent = sales*FALLBACK_RENT_RATE/100;
+      if(sales>0) problems.push('يوم '+date+': مبيعات متسجلة من غير أوردرات، الإيجار اتحسب '+FALLBACK_RENT_RATE+'%');
+    }
+    var expenses = closing ? expensesTotal(closing) : 0;
+    var log = state.staffLogs[date] || {};
+    var wagesPaid=0, transport=0;
+    Object.keys(log).forEach(function(id){
+      var e = log[id] || {};
+      wagesPaid += Number(e.paid)||0;
+      if((Number(e.hours)||0) > 0){
+        var st = state.staff.find(function(x){ return x.id===id; });
+        if(st) transport += Number(st.transportPerDay)||0;
+      }
+    });
+    var operating = sales>0 || ordersRevenue>0;
+    var consumables = operating ? settingNumber('dailyConsumables') : 0;
+    return {
+      date:date, sales:sales, ordersRevenue:ordersRevenue, materials:materials, rent:rent, expenses:expenses,
+      wagesPaid:wagesPaid, transport:transport, consumables:consumables,
+      cash: sales - expenses - wagesPaid - transport,
+      profit: sales - materials - rent - expenses - wagesPaid - transport - consumables,
+      operating:operating, hasData: operating || expenses>0 || wagesPaid>0, problems:problems
+    };
+  }
+
+  function money2(n){ return money(Math.round((Number(n)||0)*100)/100); }
+
   function findManualOrder(ordersArr){
     return ordersArr.find(function(o){return o.id==='manual';});
   }
@@ -1202,7 +1331,7 @@
     var scroll=document.createElement('div'); scroll.className='table-scroll';
     var table=document.createElement('table'); table.className='grid-table';
     var thead=document.createElement('tr');
-    thead.innerHTML='<th>الاسم</th><th>الأجر بالساعة (ج.م)</th><th>بداية النوبة</th><th>نهاية النوبة</th><th>ساعات اليوم الأساسية</th><th>الرقم السري (PIN)</th><th></th>';
+    thead.innerHTML='<th>الاسم</th><th>الأجر بالساعة (ج.م)</th><th>بداية النوبة</th><th>نهاية النوبة</th><th>ساعات اليوم الأساسية</th><th>مواصلات اليوم (ج.م)</th><th>الرقم السري (PIN)</th><th></th>';
     table.appendChild(thead);
 
     state.staff.forEach(function(s, idx){
@@ -1233,6 +1362,12 @@
       hoursInp.oninput=function(){ s.defaultHours=Number(hoursInp.value)||0; };
       tdHours.appendChild(hoursInp); tr.appendChild(tdHours);
 
+      var tdTransport=document.createElement('td');
+      var transportInp=document.createElement('input'); transportInp.type='number'; transportInp.step='any'; transportInp.min='0';
+      transportInp.value = (s.transportPerDay==null ? '' : s.transportPerDay);
+      transportInp.oninput=function(){ s.transportPerDay=Number(transportInp.value)||0; };
+      tdTransport.appendChild(transportInp); tr.appendChild(tdTransport);
+
       var tdPin=document.createElement('td');
       var pinInp=document.createElement('input'); pinInp.type='text'; pinInp.inputMode='numeric'; pinInp.style.minWidth='70px'; pinInp.placeholder='مثال: 1111';
       pinInp.value=s.pin||'';
@@ -1250,7 +1385,7 @@
 
     var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px'; actions.style.gap='10px';
     var addBtn=document.createElement('button'); addBtn.className='btn ghost'; addBtn.textContent='+ إضافة عامل';
-    addBtn.onclick=function(){ state.staff.push({id:uid('st'), name:'عامل جديد', hourlyRate:40, shiftStart:'16:00', shiftEnd:'00:00', defaultHours:8, pin:''}); render(); };
+    addBtn.onclick=function(){ state.staff.push({id:uid('st'), name:'عامل جديد', hourlyRate:40, shiftStart:'16:00', shiftEnd:'00:00', defaultHours:8, transportPerDay:40, pin:''}); render(); };
     var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ بيانات العمال';
     saveBtn.onclick=function(){ persist(); };
     actions.appendChild(addBtn); actions.appendChild(saveBtn);
@@ -1332,27 +1467,47 @@
     return total;
   }
 
+  function closingHasData(c){
+    return !!c && ((c.sales!=='' && c.sales!=null) || (c.expenses||[]).length>0 || !!c.notes);
+  }
+
   function computePosStats(){
-    var dates = Object.keys(state.dailyClosings||{});
-    var lastNet = null;
+    var dates = Object.keys(state.dailyClosings||{}).filter(function(d){ return closingHasData(state.dailyClosings[d]); });
+    var lastProfit = null;
     if(dates.length){
       var lastDate = dates.sort().slice(-1)[0];
-      var c = state.dailyClosings[lastDate];
-      lastNet = (Number(c.sales)||0) - expensesTotal(c) - dailyWagesPaid(lastDate);
+      lastProfit = dayFinance(lastDate).profit;
     }
-    return {daysCount: dates.length, lastNet: lastNet};
+    return {daysCount: dates.length, lastProfit: lastProfit};
   }
 
   function renderPosStats(){
     var s = computePosStats();
     return '<div class="stat"><div class="num">'+s.daysCount+'</div><div class="lbl">يوم متسجل إقفاله</div></div>'+
-      '<div class="stat accent"><div class="num">'+(s.lastNet===null?'—':money(s.lastNet))+'</div><div class="lbl">صافي إيراد آخر يوم متسجل</div></div>'+
+      '<div class="stat accent"><div class="num">'+(s.lastProfit===null?'—':money2(s.lastProfit))+'</div><div class="lbl">صافي الربح الحقيقي لآخر يوم متسجل</div></div>'+
       '<div class="stat"><div class="num">'+state.staff.length+'</div><div class="lbl">عمال بيسجلوا لك الأرقام</div></div>';
   }
 
   function renderFixedCosts(container){
     var wrap=document.createElement('div'); wrap.className='card'; wrap.style.marginBottom='16px';
-    var title=document.createElement('h3'); title.style.cssText='margin:0 0 10px;font-size:14.5px;'; title.textContent='مصاريف ثابتة (شهرية)';
+
+    var cTitle=document.createElement('h3'); cTitle.style.cssText='margin:0 0 10px;font-size:14.5px;'; cTitle.textContent='مصاريف تشغيل ثابتة لكل يوم شغل';
+    wrap.appendChild(cTitle);
+    var cRow=document.createElement('div'); cRow.className='field-row';
+    var cField=document.createElement('div'); cField.className='field small'; cField.innerHTML='<label>زيت وفحم وتوابل (ج.م في اليوم)</label>';
+    var cInp=document.createElement('input'); cInp.type='number'; cInp.step='any'; cInp.min='0';
+    cInp.value = (state.settings && state.settings.dailyConsumables!=null) ? state.settings.dailyConsumables : '';
+    cInp.onchange=function(){
+      if(!state.settings || typeof state.settings!=='object') state.settings={};
+      state.settings.dailyConsumables = Number(cInp.value)||0;
+      persist();
+    };
+    cField.appendChild(cInp); cRow.appendChild(cField); wrap.appendChild(cRow);
+    var cNote=document.createElement('div'); cNote.className='used-in'; cNote.style.marginTop='6px';
+    cNote.textContent='بتتخصم من الربح الحقيقي في كل يوم فيه مبيعات.';
+    wrap.appendChild(cNote);
+
+    var title=document.createElement('h3'); title.style.cssText='margin:18px 0 10px;font-size:14.5px;'; title.textContent='مصاريف ثابتة (شهرية، مش داخلة في حساب الربح)';
     wrap.appendChild(title);
 
     var list=document.createElement('div'); list.className='ing-list-edit';
@@ -1380,12 +1535,12 @@
 
   function renderPosModule(container){
     document.getElementById('pageTitle').textContent='الإقفال اليومي';
-    document.getElementById('pageSub').textContent='من غير كاشير إلكتروني — بتقفل يومك بالأرقام اللي جايالك من كابتن الأوردر والجرد';
+    document.getElementById('pageSub').textContent='المبيعات والمصاريف، وصافي الكاش والربح الحقيقي لكل يوم';
     document.getElementById('pageHint').innerHTML='الأرقام دي بتتحفظ لكل اللي بيفتحوا الصفحة دي.';
     document.getElementById('statsRow').innerHTML = renderPosStats();
 
     var note=document.createElement('div'); note.className='cat-note info';
-    note.innerHTML='مفيش كاشير إلكتروني — الشيف ماسك كابتن أوردر، وفي آخر اليوم بتسجل هنا <b>إجمالي المبيعات</b> و<b>المصاريف</b> عشان يطلعلك <b>صافي الإيراد</b> تلقائي. اعمل ورقة للعامل يسجل عليها الأرقام (مبيعات، مصاريف، حركة الأصناف، الجرد) وبعدين وزّعها هنا في السيستم.';
+    note.innerHTML='المبيعات بتتسجل تلقائي من أوردرات الكاشير، وتقدر تعدلها هنا. <b>المصاريف</b> هنا مصاريف تشغيل (غاز، نظافة، صيانة...)، والخامات بتتحسب لوحدها من الوصفات. <b>صافي الكاش</b> = اللي فاضل في الدرج، و<b>الربح الحقيقي</b> = بعد الخامات والإيجار والتشغيل كمان.';
     container.appendChild(note);
 
     renderFixedCosts(container);
@@ -1397,7 +1552,10 @@
     df.appendChild(dateInput); toolbar.appendChild(df);
     container.appendChild(toolbar);
 
-    var closing = ensureClosing(posDate);
+    // The closing only becomes part of the data once something is typed or saved,
+    // so opening this page no longer creates an empty "closed" day.
+    var closing = state.dailyClosings[posDate] || {sales:'', expenses:[], notes:''};
+    function attach(){ if(!state.dailyClosings[posDate]) state.dailyClosings[posDate]=closing; }
 
     var card=document.createElement('div'); card.className='card';
 
@@ -1405,13 +1563,12 @@
     var salesField=document.createElement('div'); salesField.className='field';
     salesField.innerHTML='<label>إجمالي المبيعات (ج.م)</label>';
     var salesInp=document.createElement('input'); salesInp.type='number'; salesInp.step='any'; salesInp.value=closing.sales;
-    var netVal;
-    salesInp.oninput=function(){ closing.sales=salesInp.value; recomputeNet(); };
+    salesInp.oninput=function(){ attach(); closing.sales=salesInp.value; recomputeNet(); };
     salesField.appendChild(salesInp);
     row1.appendChild(salesField);
     card.appendChild(row1);
 
-    var expLabel=document.createElement('label'); expLabel.textContent='المصاريف'; expLabel.style.fontSize='11.5px'; expLabel.style.color='var(--ink-dim)'; expLabel.style.fontWeight='700'; expLabel.style.display='block'; expLabel.style.margin='14px 0 8px';
+    var expLabel=document.createElement('label'); expLabel.textContent='مصاريف التشغيل اليومية'; expLabel.style.fontSize='11.5px'; expLabel.style.color='var(--ink-dim)'; expLabel.style.fontWeight='700'; expLabel.style.display='block'; expLabel.style.margin='14px 0 8px';
     card.appendChild(expLabel);
 
     var expList=document.createElement('div'); expList.className='ing-list-edit';
@@ -1422,7 +1579,7 @@
     closing.expenses.forEach(function(exp, idx){
       var row=document.createElement('div'); row.className='ing-edit-row';
       var dField=document.createElement('div'); dField.className='field'; dField.innerHTML='<label>البيان</label>';
-      var dInp=document.createElement('input'); dInp.value=exp.desc; dInp.placeholder='مثال: خضار';
+      var dInp=document.createElement('input'); dInp.value=exp.desc; dInp.placeholder='مثال: غاز';
       dInp.oninput=function(){ exp.desc=dInp.value; };
       dField.appendChild(dInp);
       var aField=document.createElement('div'); aField.className='field small'; aField.innerHTML='<label>المبلغ</label>';
@@ -1438,55 +1595,72 @@
 
     var addExpBtn=document.createElement('button'); addExpBtn.className='btn ghost'; addExpBtn.style.marginTop='10px';
     addExpBtn.textContent='+ إضافة مصروف';
-    addExpBtn.onclick=function(){ closing.expenses.push({desc:'',amount:''}); render(); };
+    addExpBtn.onclick=function(){ attach(); closing.expenses.push({desc:'',amount:''}); render(); };
     card.appendChild(addExpBtn);
 
     var notesField=document.createElement('div'); notesField.className='field'; notesField.style.marginTop='14px';
     notesField.innerHTML='<label>ملاحظات</label>';
     var notesInp=document.createElement('input'); notesInp.value=closing.notes;
-    notesInp.oninput=function(){ closing.notes=notesInp.value; };
+    notesInp.oninput=function(){ attach(); closing.notes=notesInp.value; };
     notesField.appendChild(notesInp);
     card.appendChild(notesField);
 
+    var boxCss='margin-top:10px;padding:12px 18px;border-radius:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;';
     var wagesBox=document.createElement('div');
-    wagesBox.style.cssText='margin-top:14px;padding:10px 18px;background:var(--surface-2);border-radius:10px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-dim);';
-    var wagesLabel=document.createElement('span'); wagesLabel.textContent='أجور العمال المدفوعة اليوم (من صفحة العمال → الحضور اليومي)';
+    wagesBox.style.cssText=boxCss+'background:var(--surface-2);font-size:13px;color:var(--ink-dim);';
+    var wagesLabel=document.createElement('span'); wagesLabel.textContent='أجور مدفوعة + مواصلات اليوم (من صفحة العمال ← الحضور اليومي)';
     var wagesVal=document.createElement('span'); wagesVal.style.fontWeight='700';
-    wagesVal.textContent = money(dailyWagesPaid(posDate)) + ' ج.م';
     wagesBox.appendChild(wagesLabel); wagesBox.appendChild(wagesVal);
     card.appendChild(wagesBox);
 
+    var cashBox=document.createElement('div');
+    cashBox.style.cssText=boxCss+'background:var(--surface-2);';
+    var cashLabel=document.createElement('span'); cashLabel.style.fontWeight='700'; cashLabel.textContent='صافي الكاش (بعد المصاريف والأجور والمواصلات)';
+    var cashVal=document.createElement('span'); cashVal.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:18px;';
+    cashBox.appendChild(cashLabel); cashBox.appendChild(cashVal);
+    card.appendChild(cashBox);
+
     var netBox=document.createElement('div');
-    netBox.style.cssText='margin-top:10px;padding:14px 18px;background:var(--accent-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;';
-    var netLabel=document.createElement('span'); netLabel.style.fontWeight='700'; netLabel.textContent='صافي الإيراد (بعد المصاريف والأجور)';
-    netVal=document.createElement('span'); netVal.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:20px;color:var(--accent);';
-    function recomputeNet(){ netVal.textContent = money((Number(closing.sales)||0) - expensesTotal(closing) - dailyWagesPaid(posDate)) + ' ج.م'; }
-    recomputeNet();
-    netBox.appendChild(netLabel); netBox.appendChild(netVal);
+    netBox.style.cssText=boxCss+'background:var(--accent-soft);';
+    var netLabel=document.createElement('span'); netLabel.style.fontWeight='700'; netLabel.textContent='صافي الربح الحقيقي لليوم';
+    var netVal=document.createElement('span'); netVal.style.cssText='font-family:"Cairo",sans-serif;font-weight:800;font-size:20px;color:var(--accent);';
+    var netDetail=document.createElement('div'); netDetail.className='used-in'; netDetail.style.cssText='flex-basis:100%;font-size:12px;';
+    netBox.appendChild(netLabel); netBox.appendChild(netVal); netBox.appendChild(netDetail);
     card.appendChild(netBox);
+
+    function recomputeNet(){
+      var had = !!state.dailyClosings[posDate];
+      if(!had) state.dailyClosings[posDate] = closing;
+      var f = dayFinance(posDate);
+      if(!had) delete state.dailyClosings[posDate];
+      wagesVal.textContent = money2(f.wagesPaid)+' + '+money2(f.transport)+' ج.م';
+      cashVal.textContent = money2(f.cash)+' ج.م';
+      netVal.textContent = money2(f.profit)+' ج.م';
+      netDetail.textContent = 'خامات '+money2(f.materials)+' · إيجار '+money2(f.rent)+' · زيت وفحم وتوابل '+money2(f.consumables)+(f.problems.length?' · ⚠ '+f.problems.length+' ملاحظة في التقارير':'');
+    }
+    recomputeNet();
 
     var actions=document.createElement('div'); actions.className='actions-end'; actions.style.marginTop='14px';
     var saveBtn=document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='حفظ إقفال يوم '+posDate;
-    saveBtn.onclick=function(){ persist(); };
+    saveBtn.onclick=function(){ attach(); persist(); };
     actions.appendChild(saveBtn);
     card.appendChild(actions);
 
     container.appendChild(card);
 
-    var histDates = Object.keys(state.dailyClosings).sort().reverse();
+    var histDates = Object.keys(state.dailyClosings).filter(function(d){ return closingHasData(state.dailyClosings[d]); }).sort().reverse();
     if(histDates.length){
       var histTitle=document.createElement('h3'); histTitle.style.cssText='margin:26px 0 10px;font-size:15px;'; histTitle.textContent='آخر الإقفالات';
       container.appendChild(histTitle);
       var scroll=document.createElement('div'); scroll.className='table-scroll';
       var table=document.createElement('table'); table.className='ing-master';
-      var thead=document.createElement('tr'); thead.innerHTML='<th>اليوم</th><th>المبيعات</th><th>المصاريف</th><th>الأجور</th><th>صافي الإيراد</th>';
+      var thead=document.createElement('tr'); thead.innerHTML='<th>اليوم</th><th>المبيعات</th><th>المصاريف</th><th>الأجور والمواصلات</th><th>صافي الكاش</th><th>الربح الحقيقي</th>';
       table.appendChild(thead);
+      var matIdx = materialsByNameMap();
       histDates.slice(0,14).forEach(function(d){
-        var c=state.dailyClosings[d];
-        var wages=dailyWagesPaid(d);
-        var net=(Number(c.sales)||0)-expensesTotal(c)-wages;
+        var f=dayFinance(d, matIdx);
         var tr=document.createElement('tr');
-        tr.innerHTML='<td>'+d+'</td><td>'+money(c.sales||0)+'</td><td>'+money(expensesTotal(c))+'</td><td>'+money(wages)+'</td><td style="font-weight:700;">'+money(net)+'</td>';
+        tr.innerHTML='<td>'+d+'</td><td>'+money2(f.sales)+'</td><td>'+money2(f.expenses)+'</td><td>'+money2(f.wagesPaid+f.transport)+'</td><td>'+money2(f.cash)+'</td><td style="font-weight:700;">'+money2(f.profit)+'</td>';
         table.appendChild(tr);
       });
       scroll.appendChild(table); container.appendChild(scroll);
@@ -1510,61 +1684,55 @@
 
   function renderReportsModule(container){
     document.getElementById('pageTitle').textContent='التقارير والتحليلات';
-    document.getElementById('pageSub').textContent='ملخص الإيراد والمصاريف والمبيعات والأجور وأرصدة الموردين';
+    document.getElementById('pageSub').textContent='الربح الحقيقي بعد الخامات والإيجار والمصاريف والأجور، ومبيعات الأصناف وأرصدة الموردين';
     document.getElementById('pageHint').innerHTML='التقرير بيتحدث لوحده مع كل بيانات بتضيفها في باقي أقسام النظام.';
 
+    var matIdx = materialsByNameMap();
     var days = datesInRange(reportsFrom, reportsTo);
-    var totalSales=0, totalExpenses=0, daysWithData=0;
-    var dailyNet = [];
+    var KEYS = ['sales','ordersRevenue','materials','rent','expenses','wagesPaid','transport','consumables','cash','profit'];
+    var T = {}; KEYS.forEach(function(k){ T[k]=0; });
+    var operatingDays=0, daysWithData=0, problems={}, dailyNet=[];
+    var ordersByItem={}, consumption={};
     days.forEach(function(d){
-      var c = state.dailyClosings[d];
-      if(c){
-        var net=(Number(c.sales)||0)-expensesTotal(c);
-        totalSales += Number(c.sales)||0;
-        totalExpenses += expensesTotal(c);
-        dailyNet.push({date:d, net:net});
-        daysWithData++;
-      } else {
-        dailyNet.push({date:d, net:null});
-      }
-    });
+      var f = dayFinance(d, matIdx);
+      KEYS.forEach(function(k){ T[k]+=f[k]; });
+      if(f.operating) operatingDays++;
+      if(f.hasData){ daysWithData++; dailyNet.push({date:d, net:f.profit}); }
+      else dailyNet.push({date:d, net:null});
+      f.problems.forEach(function(p){ problems[p]=true; });
 
-    var ordersByItem = {};
-    var consumptionTotal = {};
-    var ordersRevenueTotal = 0;
-    days.forEach(function(d){
-      var log = aggregateOrderItems(state.orders[d]);
-      if(!log) return;
-      state.items.forEach(function(it){
-        var qty = Number(log[it.id])||0;
+      var agg = aggregateOrderItems(state.orders[d]);
+      Object.keys(agg).forEach(function(id){
+        var qty = Number(agg[id])||0;
         if(!qty) return;
-        ordersByItem[it.id] = (ordersByItem[it.id]||0) + qty;
+        ordersByItem[id] = (ordersByItem[id]||0) + qty;
+        var it = state.items.find(function(x){ return x.id===id; });
+        if(!it) return;
+        (it.ingredients||[]).forEach(function(ing){
+          var q = Number(ing.qty);
+          if(ing.qty==='' || ing.qty==null || isNaN(q)) return;
+          var mat = matIdx[ing.name];
+          var fct = mat ? lineCostFactor(ing, mat) : null;
+          var pack = mat ? String(mat.unit).match(/^(\d+(?:\.\d+)?)\s+(.+)$/) : null;
+          var key, row;
+          if(fct===null){
+            key = ing.name+'|'+ing.unit;
+            row = consumption[key] || (consumption[key] = {name:ing.name, unit:ing.unit, qty:0, cost:0, priced:false});
+            row.qty += q*qty;
+          } else {
+            key = ing.name;
+            var showUnit = pack ? pack[2].trim() : mat.unit;
+            row = consumption[key] || (consumption[key] = {name:ing.name, unit:showUnit, qty:0, cost:0, priced:hasPrice(mat)});
+            row.qty += pack ? q*qty*fct*Number(pack[1]) : q*qty*fct;
+            if(hasPrice(mat)) row.cost += q*qty*fct*Number(mat.price);
+          }
+        });
       });
-      ordersRevenueTotal += revenueForOrders(log);
-      var cons = consumptionForOrders(log);
-      Object.keys(cons).forEach(function(k){ consumptionTotal[k] = (consumptionTotal[k]||0) + cons[k]; });
     });
-
-    var staffWagesTotal = 0;
-    days.forEach(function(d){
-      var log = state.staffLogs[d];
-      if(!log) return;
-      state.staff.forEach(function(s){
-        if(log[s.id]) staffWagesTotal += (Number(log[s.id].hours)||0) * s.hourlyRate;
-      });
-    });
-
+    var problemList = Object.keys(problems);
     var fixedCostsMonthly = state.fixedCosts.reduce(function(sum,fc){ return sum+(Number(fc.amount)||0); },0);
-    var netProfit = totalSales - totalExpenses - staffWagesTotal;
-
-    var materialsByName = {};
-    state.materials.forEach(function(m){ materialsByName[m.name]=m; });
-    var ingredientCost = 0;
-    Object.keys(consumptionTotal).forEach(function(k){
-      var name = k.split('|')[0];
-      var mat = materialsByName[name];
-      if(mat && mat.price!==undefined && mat.price!==''){ ingredientCost += consumptionTotal[k]*Number(mat.price); }
-    });
+    var owed = state.staff.reduce(function(sum,s){ return sum + staffAllTimeBalance(s.id); },0);
+    var costsTotal = T.materials+T.rent+T.expenses+T.wagesPaid+T.transport+T.consumables;
 
     var wasteCost = 0, wasteQtyByMat = {};
     var actualConsumption = {}, stockDaysCount = 0;
@@ -1576,7 +1744,7 @@
         var entry = log[m.id];
         if(!entry) return;
         var opening = Number(entry.opening)||0, closing = Number(entry.closing)||0, w = Number(entry.waste)||0;
-        if(w){ wasteQtyByMat[m.id] = (wasteQtyByMat[m.id]||0) + w; if(m.price!==undefined && m.price!=='') wasteCost += w*Number(m.price); }
+        if(w){ wasteQtyByMat[m.id] = (wasteQtyByMat[m.id]||0) + w; if(hasPrice(m)) wasteCost += w*Number(m.price); }
         if(entry.opening!=='' && entry.closing!==''){
           var consumed = opening - closing - w;
           if(consumed>0) actualConsumption[m.id] = (actualConsumption[m.id]||0) + consumed;
@@ -1585,9 +1753,9 @@
     });
 
     document.getElementById('statsRow').innerHTML =
-      '<div class="stat"><div class="num">'+money(totalSales)+'</div><div class="lbl">إجمالي المبيعات (الإقفال اليومي)</div></div>'+
-      '<div class="stat warn"><div class="num">'+money(totalExpenses+staffWagesTotal)+'</div><div class="lbl">إجمالي المصاريف + الأجور</div></div>'+
-      '<div class="stat accent"><div class="num">'+money(netProfit)+'</div><div class="lbl">صافي الربح التقريبي (كاش)</div></div>';
+      '<div class="stat"><div class="num">'+money2(T.sales)+'</div><div class="lbl">إجمالي المبيعات</div></div>'+
+      '<div class="stat warn"><div class="num">'+money2(costsTotal)+'</div><div class="lbl">إجمالي التكاليف (خامات، إيجار، مصاريف، أجور، مواصلات، تشغيل)</div></div>'+
+      '<div class="stat accent"><div class="num">'+money2(T.profit)+'</div><div class="lbl">صافي الربح الحقيقي</div></div>';
 
     var toolbar=document.createElement('div'); toolbar.className='toolbar';
     var fromField=document.createElement('div'); fromField.className='date-field'; fromField.innerHTML='<label>من</label>';
@@ -1603,12 +1771,42 @@
 
     if(daysWithData===0){
       var note=document.createElement('div'); note.className='cat-note info';
-      note.innerHTML='لسه مفيش أيام متسجل فيها إقفال يومي في الفترة دي. سجل من "الإقفال اليومي" وهيظهر هنا تلقائي.';
+      note.innerHTML='لسه مفيش مبيعات أو مصاريف أو أجور متسجلة في الفترة دي.';
       container.appendChild(note);
     }
 
-    var chartCard=document.createElement('div'); chartCard.className='chart-card';
-    var chartTitle=document.createElement('h3'); chartTitle.textContent='صافي الإيراد اليومي';
+    function line(label, value, opts){
+      opts = opts || {};
+      return '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;'+(opts.top?'border-top:2px solid var(--ink);margin-top:4px;':'border-top:1px solid var(--line);')+'">'+
+        '<span'+(opts.bold?' style="font-weight:800;"':'')+'>'+label+'</span>'+
+        '<b style="white-space:nowrap;'+(opts.color?'color:'+opts.color+';':'')+'">'+money2(value)+' ج.م</b></div>';
+    }
+    var sumTitle=document.createElement('h3'); sumTitle.className='section-title'; sumTitle.textContent='حساب الربح الحقيقي في الفترة';
+    container.appendChild(sumTitle);
+    var sumCard=document.createElement('div'); sumCard.className='card';
+    sumCard.innerHTML =
+      line('المبيعات', T.sales).replace('border-top:1px solid var(--line);','') +
+      line('− تكلفة الخامات (من الوصفات)', T.materials, {color:'var(--warn)'}) +
+      line('− الإيجار (نسبة كل قسم من المبيعات)', T.rent, {color:'var(--warn)'}) +
+      line('− مصاريف التشغيل اليومية', T.expenses, {color:'var(--warn)'}) +
+      line('− الأجور المدفوعة فعليًا', T.wagesPaid, {color:'var(--warn)'}) +
+      line('− مواصلات العمال', T.transport, {color:'var(--warn)'}) +
+      line('− زيت وفحم وتوابل ('+operatingDays+' يوم شغل)', T.consumables, {color:'var(--warn)'}) +
+      line('صافي الربح الحقيقي', T.profit, {top:true, bold:true, color:'var(--accent)'}) +
+      line('صافي الكاش (المبيعات − المصاريف − الأجور المدفوعة − المواصلات)', T.cash) +
+      line('مستحق للعمال ولسه متدفعش (مش مخصوم من الربح فوق)', owed, {color: owed>0?'var(--warn)':''}) +
+      line('مصاريف ثابتة شهرية (مش داخلة في الحساب)', fixedCostsMonthly);
+    container.appendChild(sumCard);
+
+    if(problemList.length){
+      var probCard=document.createElement('div'); probCard.className='cat-note'; probCard.style.marginTop='12px';
+      probCard.innerHTML='<b>⚠ حاجات محتاجة مراجعة عشان الحساب يبقى دقيق:</b><ul style="margin:6px 0 0;padding-inline-start:18px;">'+
+        problemList.map(function(p){ return '<li>'+esc(p)+'</li>'; }).join('')+'</ul>';
+      container.appendChild(probCard);
+    }
+
+    var chartCard=document.createElement('div'); chartCard.className='chart-card'; chartCard.style.marginTop='16px';
+    var chartTitle=document.createElement('h3'); chartTitle.textContent='صافي الربح الحقيقي اليومي';
     chartCard.appendChild(chartTitle);
     var maxAbs = Math.max(1, ...dailyNet.map(function(x){ return Math.abs(x.net||0); }));
     var chart=document.createElement('div'); chart.className='bar-chart';
@@ -1617,7 +1815,7 @@
       var bar=document.createElement('div'); bar.className='bar'+((x.net||0)<0?' neg':'');
       var h = x.net===null ? 2 : Math.max(2, Math.round((Math.abs(x.net)/maxAbs)*120));
       bar.style.height = h+'px';
-      bar.title = x.date + (x.net===null ? ' — مفيش بيانات' : (' — '+money(x.net)+' ج.م'));
+      bar.title = x.date + (x.net===null ? ' - مفيش بيانات' : (' - '+money2(x.net)+' ج.م'));
       col.appendChild(bar);
       var lbl=document.createElement('div'); lbl.className='bar-label'; lbl.textContent=x.date.slice(8,10);
       col.appendChild(lbl);
@@ -1629,23 +1827,30 @@
     var salesTitle=document.createElement('h3'); salesTitle.className='section-title'; salesTitle.textContent='مبيعات الأصناف في الفترة (من الأوردرات المسجّلة)';
     container.appendChild(salesTitle);
     var revNote=document.createElement('div'); revNote.className='cat-note';
-    revNote.innerHTML='الإيراد المتوقع من الأوردرات المسجّلة: <b>'+money(ordersRevenueTotal)+' ج.م</b> — قارنه بإجمالي المبيعات الفعلي في الإقفال اليومي (<b>'+money(totalSales)+' ج.م</b>) عشان تتأكد كل حاجة متسجلة صح.';
+    revNote.innerHTML='الإيراد من الأوردرات المسجّلة: <b>'+money2(T.ordersRevenue)+' ج.م</b>، والمبيعات في الإقفال اليومي: <b>'+money2(T.sales)+' ج.م</b>. لو فيه فرق، اتأكد إن كل الأوردرات متسجلة.';
     container.appendChild(revNote);
 
     var orderedIds = Object.keys(ordersByItem);
     if(orderedIds.length===0){
-      var eo=document.createElement('div'); eo.className='empty'; eo.textContent='لسه مفيش أوردرات متسجلة في الفترة دي — سجلها من "مبيعات الأصناف".';
+      var eo=document.createElement('div'); eo.className='empty'; eo.textContent='لسه مفيش أوردرات متسجلة في الفترة دي.';
       container.appendChild(eo);
     } else {
       var scroll1=document.createElement('div'); scroll1.className='table-scroll';
       var table1=document.createElement('table'); table1.className='ing-master';
-      table1.innerHTML='<tr><th>الصنف</th><th>عدد الأوردرات</th><th>الإيراد</th></tr>';
+      var rows1='<tr><th>الصنف</th><th>العدد</th><th>الإيراد</th><th>تكلفة الخامات</th><th>الإيجار</th><th>الباقي</th></tr>';
+      var sumQty=0, sumRev=0, sumMat=0, sumRent=0;
       state.items.forEach(function(it){
-        if(!ordersByItem[it.id]) return;
-        var tr=document.createElement('tr');
-        tr.innerHTML='<td><b>'+esc(it.name)+'</b></td><td>'+money(ordersByItem[it.id])+'</td><td>'+money(ordersByItem[it.id]*it.price)+' ج.م</td>';
-        table1.appendChild(tr);
+        var qty = ordersByItem[it.id];
+        if(!qty) return;
+        var rev = qty*(Number(it.price)||0);
+        var mc = qty*itemCostInfo(it, matIdx).cost;
+        var rr = categoryRentRate(it.category); if(rr===null) rr = FALLBACK_RENT_RATE;
+        var rent = rev*rr/100;
+        sumQty+=qty; sumRev+=rev; sumMat+=mc; sumRent+=rent;
+        rows1 += '<tr><td><b>'+esc(it.name)+'</b></td><td>'+money(qty)+'</td><td>'+money2(rev)+'</td><td>'+money2(mc)+'</td><td>'+money2(rent)+' <span class="used-in">('+rr+'%)</span></td><td style="font-weight:700;">'+money2(rev-mc-rent)+'</td></tr>';
       });
+      rows1 += '<tr style="font-weight:800;"><td>الإجمالي</td><td>'+money(sumQty)+'</td><td>'+money2(sumRev)+'</td><td>'+money2(sumMat)+'</td><td>'+money2(sumRent)+'</td><td>'+money2(sumRev-sumMat-sumRent)+'</td></tr>';
+      table1.innerHTML = rows1;
       scroll1.appendChild(table1); container.appendChild(scroll1);
 
       var consTitle=document.createElement('h3'); consTitle.className='section-title'; consTitle.textContent='استهلاك الخامات المتوقع في الفترة';
@@ -1653,29 +1858,30 @@
       var scroll2b=document.createElement('div'); scroll2b.className='table-scroll';
       var table2b=document.createElement('table'); table2b.className='ing-master';
       var rows2b='<tr><th>الخامة</th><th>الكمية المتوقع استهلاكها</th><th>التكلفة</th></tr>';
-      Object.keys(consumptionTotal).sort(function(a,b){return a.localeCompare(b,'ar');}).forEach(function(k){
-        var parts=k.split('|');
-        var mat = materialsByName[parts[0]];
-        var costCell = (mat && mat.price!==undefined && mat.price!=='') ? (money(consumptionTotal[k]*Number(mat.price))+' ج.م') : '<span class="used-in">سعر الوحدة مش مسجل</span>';
-        rows2b += '<tr><td><b>'+esc(parts[0])+'</b></td><td>'+money(consumptionTotal[k])+' '+esc(parts[1])+'</td><td>'+costCell+'</td></tr>';
+      Object.keys(consumption).sort(function(a,b){ return a.localeCompare(b,'ar'); }).forEach(function(k){
+        var r = consumption[k];
+        var costCell = r.priced ? (money2(r.cost)+' ج.م') : '<span class="used-in">مش محسوبة (راجع الملاحظات فوق)</span>';
+        rows2b += '<tr><td><b>'+esc(r.name)+'</b></td><td>'+money2(r.qty)+' '+esc(r.unit)+'</td><td>'+costCell+'</td></tr>';
       });
       table2b.innerHTML = rows2b;
       scroll2b.appendChild(table2b); container.appendChild(scroll2b);
 
       var cogsCard=document.createElement('div'); cogsCard.className='card'; cogsCard.style.marginTop='12px';
-      cogsCard.innerHTML='<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>إجمالي تكلفة الخامات المستهلكة</span><b>'+money(ingredientCost)+' ج.م</b></div>'+
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>هامش الربح (الإيراد من الأوردرات − تكلفة الخامات)</span><b style="color:var(--accent);">'+money(ordersRevenueTotal-ingredientCost)+' ج.م</b></div>'+
-        '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>تكلفة الهالك والمرتجع في الفترة</span><b style="color:var(--warn);">'+money(wasteCost)+' ج.م</b></div>';
+      cogsCard.innerHTML =
+        line('إجمالي تكلفة الخامات المستهلكة', T.materials).replace('border-top:1px solid var(--line);','') +
+        line('الإيجار', T.rent) +
+        line('الباقي بعد الخامات والإيجار', T.sales-T.materials-T.rent, {color:'var(--accent)'}) +
+        line('تكلفة الهالك والمرتجع في الفترة (من الجرد)', wasteCost, {color:'var(--warn)'});
       container.appendChild(cogsCard);
     }
 
     var actualTitle=document.createElement('h3'); actualTitle.className='section-title'; actualTitle.textContent='استهلاك الخامات الفعلي (من حركة المخزون) في الفترة';
     container.appendChild(actualTitle);
     var actualNote=document.createElement('div'); actualNote.className='cat-note';
-    actualNote.innerHTML='محسوبة من أرقام "حركة الخامات اليومية" الحقيقية (بداية − نهاية − هالك) في '+stockDaysCount+' يوم متسجل — قارنها بجدول "الاستهلاك المتوقع من الأوردرات" فوق عشان تتأكد الاتنين متقاربين.';
+    actualNote.innerHTML='محسوبة من أرقام "حركة الخامات اليومية" الحقيقية (بداية − نهاية − هالك) في '+stockDaysCount+' يوم متسجل. قارنها بالاستهلاك المتوقع فوق عشان تتأكد الاتنين متقاربين.';
     container.appendChild(actualNote);
     var actualIds = Object.keys(actualConsumption);
-    if(actualIds.length===0){
+    if(actualIds.length===0 && Object.keys(wasteQtyByMat).length===0){
       var eaEmpty=document.createElement('div'); eaEmpty.className='empty'; eaEmpty.textContent='لسه مفيش أرقام بداية/نهاية يوم متسجلة في الفترة دي.';
       container.appendChild(eaEmpty);
     } else {
@@ -1684,18 +1890,11 @@
       var rows2c='<tr><th>الخامة</th><th>الاستهلاك الفعلي</th><th>هالك/مرتجع</th></tr>';
       state.materials.forEach(function(m){
         if(!actualConsumption[m.id] && !wasteQtyByMat[m.id]) return;
-        rows2c += '<tr><td><b>'+esc(m.name)+'</b></td><td>'+money(actualConsumption[m.id]||0)+' '+esc(m.unit)+'</td><td'+(wasteQtyByMat[m.id]?' style="color:var(--warn);"':'')+'>'+money(wasteQtyByMat[m.id]||0)+' '+esc(m.unit)+'</td></tr>';
+        rows2c += '<tr><td><b>'+esc(m.name)+'</b></td><td>'+money2(actualConsumption[m.id]||0)+' '+esc(m.unit)+'</td><td'+(wasteQtyByMat[m.id]?' style="color:var(--warn);"':'')+'>'+money2(wasteQtyByMat[m.id]||0)+' '+esc(m.unit)+'</td></tr>';
       });
       table2c.innerHTML = rows2c;
       scroll2c.appendChild(table2c); container.appendChild(scroll2c);
     }
-
-    var wageTitle=document.createElement('h3'); wageTitle.className='section-title'; wageTitle.textContent='الأجور والمصاريف الثابتة';
-    container.appendChild(wageTitle);
-    var wageCard=document.createElement('div'); wageCard.className='card';
-    wageCard.innerHTML='<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>إجمالي أجور العمال في الفترة</span><b>'+money(staffWagesTotal)+' ج.م</b></div>'+
-      '<div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);"><span>مصاريف ثابتة شهرية (مش محسوبة في صافي الربح تلقائيًا)</span><b>'+money(fixedCostsMonthly)+' ج.م</b></div>';
-    container.appendChild(wageCard);
 
     var supTitle=document.createElement('h3'); supTitle.className='section-title'; supTitle.textContent='أرصدة الموردين الحالية';
     container.appendChild(supTitle);
@@ -1706,7 +1905,7 @@
       var entries = state.supplierLedger[s.id]||[];
       var bal = entries.reduce(function(sum,e){ return sum + (e.type==='فاتورة' ? (Number(e.amount)||0) : -(Number(e.amount)||0)); },0);
       var tr=document.createElement('tr');
-      tr.innerHTML='<td><b>'+esc(s.name)+'</b></td><td class="used-in">'+esc(s.paymentTerms)+'</td><td'+(bal>0?' style="color:var(--warn);font-weight:700;"':'')+'>'+money(bal)+' ج.م</td>';
+      tr.innerHTML='<td><b>'+esc(s.name)+'</b></td><td class="used-in">'+esc(s.paymentTerms)+'</td><td'+(bal>0?' style="color:var(--warn);font-weight:700;"':'')+'>'+money2(bal)+' ج.م</td>';
       table2.appendChild(tr);
     });
     scroll2.appendChild(table2); container.appendChild(scroll2);
@@ -1959,7 +2158,7 @@
 
     var netBox=document.createElement('div'); netBox.className='cash-net';
     var netVal;
-    netBox.innerHTML='<div class="lbl">الصافي المتوقع النهاردة</div>';
+    netBox.innerHTML='<div class="lbl">الكاش المتوقع النهاردة (المبيعات − المصاريف)</div>';
     netVal=document.createElement('div'); netVal.className='val';
     netBox.appendChild(netVal);
     wrap.appendChild(netBox);
